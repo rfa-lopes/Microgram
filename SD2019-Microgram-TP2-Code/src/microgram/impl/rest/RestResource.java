@@ -22,7 +22,7 @@ public class RestResource {
 	}
 
 	/**
-	 * Translates a Result<T> to a HTTP Status code
+	 * Translates a Result<T> to a HTTPS Status code
 	 */
 	static protected Status statusCode(Result<?> result) {
 		switch (result.error()) {

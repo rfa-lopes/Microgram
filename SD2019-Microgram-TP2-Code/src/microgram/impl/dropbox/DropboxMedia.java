@@ -257,14 +257,12 @@ public class DropboxMedia implements Media{
 				ByteArrayOutputStream output = new ByteArrayOutputStream();
 				byte[] arr;
 				int size =Integer.parseInt(r.getHeader("Content-Length"));
-				System.out.println(size);
 				int counter = 0;
 				while(counter < size) {
 					arr = new byte[1024];
 					counter += in.read(arr);
 					output.write(arr);
 				}
-				System.out.println(output.size());
 				return Result.ok(output.toByteArray());
 			}else {
 				System.err.println("Unexpected error HTTP: " + r.getCode());

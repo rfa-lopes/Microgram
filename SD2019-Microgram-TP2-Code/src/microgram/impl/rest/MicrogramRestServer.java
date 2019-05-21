@@ -5,6 +5,8 @@ import static utils.Log.Log;
 import java.net.URI;
 import java.util.logging.Level;
 
+import javax.net.ssl.SSLContext;
+
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -21,7 +23,7 @@ public class MicrogramRestServer {
 	private static final String POSTS_SERVICE = "Microgram-Posts";
 	private static final String PROFILES_SERVICE = "Microgram-Profiles";
 	
-	public static String SERVER_BASE_URI = "http://%s:%s/rest";
+	public static String SERVER_BASE_URI = "https://%s:%s/rest";
 
 	public static void main(String[] args) throws Exception {
 		Args.use(args);
@@ -45,7 +47,7 @@ public class MicrogramRestServer {
 //		config.register(new PrematchingRequestFilter());
 //		config.register(new GenericExceptionMapper());
 
-		JdkHttpServerFactory.createHttpServer(URI.create(serverURI.replace(ip, "0.0.0.0")), config);
+		JdkHttpServerFactory.createHttpServer(URI.create(serverURI.replace(ip, "0.0.0.0")), config, SSLContext.getDefault());
 
 		Log.fine(String.format("Posts+Profiles Combined Rest Server ready @ %s\n", serverURI));
 	}
