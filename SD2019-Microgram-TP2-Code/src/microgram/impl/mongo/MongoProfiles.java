@@ -32,7 +32,7 @@ public class MongoProfiles implements Profiles {
 
 	@Override
 	public Result<Profile> getProfile(String userId) {
-		Profile res = profiles.find(Filters.eq("userId", userId)).first();
+		Profile res = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
 		if(res == null)
 			return error(NOT_FOUND);
 		return ok(res);
@@ -63,8 +63,8 @@ public class MongoProfiles implements Profiles {
 	@Override
 	public Result<Void> follow(String userId1, String userId2, boolean isFollowing) {
 
-		Profile u1 = profiles.find(Filters.eq("userId", userId1)).first();
-		Profile u2 = profiles.find(Filters.eq("userId", userId2)).first();
+		Profile u1 = profiles.find(Filters.eq(DataBase.USERID, userId1)).first();
+		Profile u2 = profiles.find(Filters.eq(DataBase.USERID, userId2)).first();
 
 		//Profiles nao existem
 		if(u1 == null || u2 == null)
@@ -78,8 +78,8 @@ public class MongoProfiles implements Profiles {
 			}
 			//user1 quer deixar de seguir user2
 			else {
-				followers.deleteOne(Filters.and(Filters.eq("id1", userId2), Filters.eq("id2", userId1) ));
-				followings.deleteOne(Filters.and(Filters.eq("id1", userId1), Filters.eq("id2", userId2) ));
+				followers.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId2), Filters.eq(DataBase.ID2, userId1) ));
+				followings.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2) ));
 			}
 		} catch( MongoWriteException x ) {
 			//Caso queira seguir alguem que ja segue
@@ -92,8 +92,8 @@ public class MongoProfiles implements Profiles {
 
 	@Override
 	public Result<Boolean> isFollowing(String userId1, String userId2) {
-		Profile u1 = profiles.find(Filters.eq("userId", userId1)).first();
-		Profile u2 = profiles.find(Filters.eq("userId", userId2)).first();
+		Profile u1 = profiles.find(Filters.eq(DataBase.USERID, userId1)).first();
+		Profile u2 = profiles.find(Filters.eq(DataBase.USERID, userId2)).first();
 
 		//Profiles nao existem
 		if(u1 == null || u2 == null)
@@ -101,7 +101,7 @@ public class MongoProfiles implements Profiles {
 
 		//Se userId1 seguir userId2 vai returnar um par
 		//Se nao seguir, retorna null (porque nao existe na tabela)
-		Pair res = followings.find(Filters.and(Filters.eq("id1", userId1), Filters.eq("id2", userId2))).first();
+		Pair res = followings.find(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2))).first();
 		return ok(res != null);
 	}
 
