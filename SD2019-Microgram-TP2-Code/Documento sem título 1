@@ -1,0 +1,6 @@
+Correr testes :
+
+mvn clean install ( quando ha alteracoes)
+./sd19-run-services.sh
+./testn-sd2.sh -image sd19-tp2-50435-51065
+

@@ -13,3 +13,25 @@ posts-rest-service-port=
 
 profiles-rest-service-mainclass=
 profiles-rest-service-port=
+
+
+profiles-truststore=/home/sd/client-truststore.ks
+profiles-truststore-password=changeit
+mediastorage-truststore=/home/sd/client-truststore.ks
+mediastorage-truststore-password=changeit
+microgram-truststore=/home/sd/client-truststore.ks
+microgram-truststore-password=changeit
+tester-truststore=/home/sd/client-truststore.ks
+tester-truststore-password=changeit
+posts-truststore=/home/sd/client-truststore.ks
+posts-truststore-password=changeit
+
+mediastorage-keystore=/home/sd/mediaserver.ks
+mediastorage-keystore-password=changeit
+posts-keystore=/home/sd/microgramserver.ks
+posts-keystore-password=changeit
+profiles-keystore=/home/sd/microgramserver.ks
+profiles-keystore-password=changeit
+microgram-keystore=/home/sd/microgramserver.ks
+microgram-keystore-password=changeit
+
