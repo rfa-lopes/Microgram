@@ -17,6 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import microgram.api.Post;
 import microgram.api.java.Posts;
 import microgram.api.java.Result;
+import microgram.impl.mongo.MongoPosts;
+import microgram.impl.mongo.MongoProfiles;
 
 public final class JavaPosts implements Posts {
 
@@ -27,20 +29,25 @@ public final class JavaPosts implements Posts {
 	final Map<String, Post> posts = new ConcurrentHashMap<>();
 	final Map<String, Set<String>> likes = new ConcurrentHashMap<>();
 	final Map<String, Set<String>> userPosts = new ConcurrentHashMap<>();
-
+	
+	private MongoPosts postsManager;
+	
 	public JavaPosts() {
+		postsManager = new MongoPosts();
 		Posts = this;
 	}
 
 	@Override
 	public Result<Post> getPost(String postId) {
-		Post res = posts.get(postId);
-		if (res != null) {
-			res.setLikes( likes.getOrDefault(postId, Collections.emptySet()).size());
-			return ok(res);
-		}
-		else
-			return error(NOT_FOUND);
+		Result<Post> res = postsManager.getPost(postId);
+		return res;
+//		Post res = posts.get(postId);
+//		if (res != null) {
+//			res.setLikes( likes.getOrDefault(postId, Collections.emptySet()).size());
+//			return ok(res);
+//		}
+//		else
+//			return error(NOT_FOUND);
 	}
 	
 	@Override

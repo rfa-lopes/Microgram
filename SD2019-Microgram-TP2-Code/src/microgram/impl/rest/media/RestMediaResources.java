@@ -10,7 +10,7 @@ public class RestMediaResources extends RestResource implements RestMedia {
 	final Media impl;
 	final String baseUri;
 
-	public RestMediaResources(String baseUri) {
+	public RestMediaResources(String baseUri) throws Exception {
 		this.baseUri = baseUri;
 		this.impl = new JavaMedia();
 	}

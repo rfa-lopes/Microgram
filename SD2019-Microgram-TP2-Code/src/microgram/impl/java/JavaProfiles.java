@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import microgram.api.Profile;
 import microgram.api.java.Profiles;
 import microgram.api.java.Result;
+import microgram.impl.mongo.MongoProfiles;
 
 public final class JavaProfiles implements Profiles {
 	
@@ -25,86 +26,89 @@ public final class JavaProfiles implements Profiles {
 	final Map<String, Profile> users = new ConcurrentHashMap<>();
 	final Map<String, Set<String>> followers = new ConcurrentHashMap<>();
 	final Map<String, Set<String>> following = new ConcurrentHashMap<>();
+	
+	private MongoProfiles profilesManager;
 		
 	public JavaProfiles() {
-		Profiles = this;
+		profilesManager = new MongoProfiles();
 	}
 	
 	@Override
+	
 	public Result<Profile> getProfile(String userId) {
-		Profile res = users.get(userId);
-		if (res == null)
-			return error(NOT_FOUND);
-
-		res.setFollowers(followers.get(userId).size());
-		res.setFollowing(following.get(userId).size());		
-		res.setPosts( Posts.getUserPostsStats(userId));
-		return ok(res);
+		Result<Profile> res = profilesManager.getProfile(userId);
+		return res;
 	}
 
 	@Override
 	public Result<Void> createProfile(Profile profile) {
-		Profile res = users.putIfAbsent(profile.getUserId(), profile);
-		if (res != null)
-			return error(CONFLICT);
-
+		Result<Void> res = profilesManager.createProfile(profile);
+		
+		if(!res.isOK())
+			return res;
+		//TODO atualizar as tabelas de followers e followings
 		followers.put(profile.getUserId(), ConcurrentHashMap.newKeySet());
 		following.put(profile.getUserId(), ConcurrentHashMap.newKeySet());
 
-		return ok();
+		return res;
 	}
 
 	@Override
 	public Result<Void> deleteProfile(String userId) {
-		Profile res = users.get(userId);
-		if (res == null)
-			return error(NOT_FOUND);
-
+		Result<Void> res = profilesManager.deleteProfile(userId);
+		if(!res.isOK())
+			return res;
+		//TODO atualizar as tabelas de followers e followings
 		for (String follower : followers.remove(userId))
 			following.getOrDefault(follower, DUMMY_SET).remove(userId);
 	
 		for (String followee : following.remove(userId))
 			followers.getOrDefault(followee, DUMMY_SET).remove(userId);
 	
-		users.remove(userId);
-		Posts.deleteAllUserPosts(userId);
+		//users.remove(userId);
+		//TODO realizar invocação remota pois iston ao esta bem
+		//Posts.deleteAllUserPosts(userId);
 		
 		return ok();
 	}
 
 	@Override
 	public Result<List<Profile>> search(String prefix) {
-		return ok(users.values().stream().filter(p -> p.getUserId().startsWith(prefix)).collect(Collectors.toList()));
+		return null;
+		//return ok(users.values().stream().filter(p -> p.getUserId().startsWith(prefix)).collect(Collectors.toList()));
 	}
 
 
 	@Override
 	public Result<Boolean> isFollowing(String userId1, String userId2) {
-
-		Set<String> s1 = following.get(userId1);
-
-		if (s1 == null)
-			return error(NOT_FOUND);
-		else
-			return ok(s1.contains(userId2));
+		Result<Boolean> res = profilesManager.isFollowing(userId1, userId2);
+		return res;
+//		Set<String> s1 = following.get(userId1);
+//
+//		if (s1 == null)
+//			return error(NOT_FOUND);
+//		else
+//			return ok(s1.contains(userId2));
 	}
 
 	@Override
 	public Result<Void> follow(String userId1, String userId2, boolean isFollowing) {
-		Set<String> s1 = following.get(userId1);
-		Set<String> s2 = followers.get(userId2);
-
-		if (s1 == null || s2 == null)
-			return error(NOT_FOUND);
-
-		if (isFollowing) {
-			s1.add(userId2);
-			s2.add(userId1);
-		} else {
-			s1.remove(userId2); 
-			s2.remove(userId1);
-		}
-		return ok();
+		Result<Void> res = profilesManager.follow(userId1, userId2, isFollowing);
+		return res;
+//		Set<String> s1 = following.get(userId1);
+//		Set<String> s2 = followers.get(userId2);
+//
+//		if (s1 == null || s2 == null)
+//			return error(NOT_FOUND);
+//
+//		if (isFollowing) {
+//			s1.add(userId2);
+//			s2.add(userId1);
+//		} else {
+//			s1.remove(userId2); 
+//			s2.remove(userId1);
+//		}
+//		return ok();
 	}
 
 	Set<String> following(String userId) {

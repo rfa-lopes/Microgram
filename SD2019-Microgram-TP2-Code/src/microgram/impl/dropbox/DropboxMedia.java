@@ -54,6 +54,9 @@ public class DropboxMedia implements Media{
 	private static final String GET_TEMPORARY_LINK_FILE_V2_URL = "https://api.dropboxapi.com/2/files/get_temporary_link";
 
 	private static final String DROPBOX_API_ARG = "Dropbox-API-Arg";
+	
+	private static final String MEDIA_EXTENSION = ".jpg";
+	private static final String ROOT_DIR = "/tmp/microgram/";
 
 	protected OAuth20Service service;
 	protected OAuth2AccessToken accessToken;
@@ -208,7 +211,7 @@ public class DropboxMedia implements Media{
 		try {
 			OAuthRequest createFile = new OAuthRequest(Verb.POST, CREATE_FILE_V2_URL);
 			String id = Hash.of(bytes); // unica alteracao em relacao ao codigo desenvolvido na aula pratica
-			createFile.addHeader(DROPBOX_API_ARG, JSON.encode(new CreateFileV2Args(id)));
+			createFile.addHeader(DROPBOX_API_ARG, JSON.encode(new CreateFileV2Args(ROOT_DIR + id + MEDIA_EXTENSION)));
 			createFile.addHeader("Content-Type", OCTETSTREAM_CONTENT_TYPE);
 			createFile.setPayload(bytes);
 			

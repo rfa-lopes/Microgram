@@ -50,7 +50,10 @@ public class MongoProfiles implements Profiles {
 
 	@Override
 	public Result<Void> deleteProfile(String userId) {
-		// TODO Auto-generated method stub
+		Profile res = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
+		if(res == null)
+			return error(NOT_FOUND);
+		//TODO realizar a operação de eliminar
 		return null;
 	}
 
