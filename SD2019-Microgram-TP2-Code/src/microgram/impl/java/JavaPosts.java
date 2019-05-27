@@ -54,6 +54,7 @@ public final class JavaPosts implements Posts {
 	public Result<String> createPost(Post post) {
 		String ownerId = post.getOwnerId();
 		
+		//TODO isto tem de ser por invocação remota
 		if( ! Profiles.getProfile( ownerId ).isOK() )
 			return error(NOT_FOUND);
 		
@@ -79,28 +80,31 @@ public final class JavaPosts implements Posts {
 	
 	@Override
 	public Result<Void> like(String postId, String userId, boolean isLiked) {
-
-		Set<String> res = likes.get(postId);
-		if (res == null)
-			return error(NOT_FOUND);
-
-		if (isLiked) {
-			if (!res.add(userId))
-				return error(CONFLICT);
-		} else {
-			if (!res.remove(userId))
-				return error(NOT_FOUND);
-		}
-		return ok();
+		Result<Void> res = postsManager.like(postId, userId, isLiked);
+		return res;
+//		Set<String> res = likes.get(postId);
+//		if (res == null)
+//			return error(NOT_FOUND);
+//
+//		if (isLiked) {
+//			if (!res.add(userId))
+//				return error(CONFLICT);
+//		} else {
+//			if (!res.remove(userId))
+//				return error(NOT_FOUND);
+//		}
+//		return ok();
 	}
 
 	@Override
 	public Result<Boolean> isLiked(String postId, String userId) {
-		Set<String> res = likes.get(postId);
-		if (res != null)
-			return ok(res.contains(userId));
-		else
-			return error(NOT_FOUND);
+		Result<Boolean> res = postsManager.isLiked(postId, userId);
+		return res;
+//		Set<String> res = likes.get(postId);
+//		if (res != null)
+//			return ok(res.contains(userId));
+//		else
+//			return error(NOT_FOUND);
 	}
 	
 	@Override
