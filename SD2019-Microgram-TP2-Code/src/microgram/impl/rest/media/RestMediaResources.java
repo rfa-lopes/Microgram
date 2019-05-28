@@ -17,7 +17,7 @@ public class RestMediaResources extends RestResource implements RestMedia {
 
 	@Override
 	public String upload(byte[] bytes) {
-		return baseUri + "/" + super.resultOrThrow(impl.upload(bytes));
+		return baseUri + super.resultOrThrow(impl.upload(bytes));
 	}
 
 	@Override

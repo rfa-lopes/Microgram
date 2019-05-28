@@ -56,7 +56,7 @@ public class DropboxMedia implements Media{
 	private static final String DROPBOX_API_ARG = "Dropbox-API-Arg";
 	
 	private static final String MEDIA_EXTENSION = ".jpg";
-	private static final String ROOT_DIR = "/tmp/microgram/";
+	private static final String ROOT_DIR = "/";
 
 	protected OAuth20Service service;
 	protected OAuth2AccessToken accessToken;
@@ -222,8 +222,8 @@ public class DropboxMedia implements Media{
 				System.err.println("Dropbox file already exists");
 				return Result.error(Result.ErrorCode.CONFLICT);
 			}else if(r.getCode() == 200) {
-				System.err.println("Dropbox file was created with success");
-				return Result.ok();
+				System.out.println("Dropbox file was created with success");
+				return Result.ok(ROOT_DIR + id + MEDIA_EXTENSION);
 			}else {
 				System.err.println("Unexpected error HTTP: " + r.getCode());
 				System.err.println(r.getBody());
@@ -266,6 +266,7 @@ public class DropboxMedia implements Media{
 					counter += in.read(arr);
 					output.write(arr);
 				}
+				System.out.println("Dropbox file was downloaded with success");
 				return Result.ok(output.toByteArray());
 			}else {
 				System.err.println("Unexpected error HTTP: " + r.getCode());
@@ -299,7 +300,7 @@ public class DropboxMedia implements Media{
 				System.err.println("Bad request: error on path to file");
 				return Result.error(Result.ErrorCode.INTERNAL_ERROR);
 			}else if(r.getCode() == 200) {
-				System.err.println("Dropbox file was deleted with success");
+				System.out.println("Dropbox file was deleted with success");
 				return Result.ok();
 			}else {
 				System.err.println("Unexpected error HTTP: " + r.getCode());

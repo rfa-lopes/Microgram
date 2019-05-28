@@ -11,7 +11,7 @@ import microgram.impl.dropbox.DropboxMedia;
 public class JavaMedia implements Media {
 
 	private static final String MEDIA_EXTENSION = ".jpg";
-	private static final String ROOT_DIR = "/tmp/microgram/";
+	private static final String ROOT_DIR = "/";
 	
 	private DropboxMedia media;
 	public JavaMedia() throws Exception {
@@ -22,6 +22,7 @@ public class JavaMedia implements Media {
 	public Result<String> upload(byte[] bytes) {
 		try {
 			Result<String> res = media.upload(bytes);
+			System.out.println(res.value());
 			return res;
 		} catch (Exception x) {
 			return error(INTERNAL_ERROR);
@@ -31,7 +32,8 @@ public class JavaMedia implements Media {
 	@Override
 	public Result<byte[]> download(String id) {
 		try {
-			Result<byte[]> res = media.download(ROOT_DIR + id + MEDIA_EXTENSION);
+			System.out.println(ROOT_DIR + id);
+			Result<byte[]> res = media.download(ROOT_DIR + id);
 			return res;
 		} catch (Exception x) {
 			return error(INTERNAL_ERROR);
@@ -41,7 +43,8 @@ public class JavaMedia implements Media {
 	@Override
 	public Result<Void> delete(String id) {
 		try {
-			Result<Void> res = media.delete(ROOT_DIR + id + MEDIA_EXTENSION);
+			System.out.println(ROOT_DIR + id);
+			Result<Void> res = media.delete(ROOT_DIR + id);
 			return res;
 		} catch (Exception x) {
 			return error(INTERNAL_ERROR);
