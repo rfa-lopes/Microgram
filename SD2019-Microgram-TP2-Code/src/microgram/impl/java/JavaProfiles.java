@@ -31,6 +31,7 @@ public final class JavaProfiles implements Profiles {
 		
 	public JavaProfiles() {
 		profilesManager = new MongoProfiles();
+		Profiles = this;
 	}
 	
 	@Override

@@ -264,7 +264,7 @@ public class DropboxMedia implements Media{
 				while(counter < size) {
 					arr = new byte[1024];
 					counter += in.read(arr);
-					output.write(arr);
+					output.write(arr,0,arr.length); // pois se assim nao fosse podia estar a escrever lixo desnecessariamente
 				}
 				System.out.println("Dropbox file was downloaded with success");
 				return Result.ok(output.toByteArray());

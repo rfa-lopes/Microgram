@@ -15,6 +15,8 @@ import microgram.api.rest.RestPosts;
 import microgram.api.rest.RestProfiles;
 import microgram.impl.rest.posts.replicated.ReplicatedPostsResources;
 import microgram.impl.rest.profiles.replicated.ReplicatedProfilesResources;
+import microgram.impl.rest.utils.GenericExceptionMapper;
+import microgram.impl.rest.utils.PrematchingRequestFilter;
 import utils.Args;
 import utils.IP;
 
@@ -44,8 +46,8 @@ public class MicrogramRestServer {
 		config.register(new ReplicatedPostsResources());
 		config.register(new ReplicatedProfilesResources());
 		
-//		config.register(new PrematchingRequestFilter());
-//		config.register(new GenericExceptionMapper());
+		config.register(new PrematchingRequestFilter());
+		config.register(new GenericExceptionMapper());
 
 		JdkHttpServerFactory.createHttpServer(URI.create(serverURI.replace(ip, "0.0.0.0")), config, SSLContext.getDefault());
 

@@ -5,6 +5,7 @@ import static microgram.api.java.Result.ok;
 import static microgram.api.java.Result.ErrorCode.NOT_FOUND;
 import static microgram.api.java.Result.ErrorCode.CONFLICT;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -14,6 +15,7 @@ import org.bson.codecs.pojo.PojoCodecProvider;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoWriteException;
+import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
@@ -47,10 +49,18 @@ public class MongoProfiles implements Profiles {
 	public static final String ID2 = "id2";
 
 	public MongoProfiles() {
-		mongo = new MongoClient( "localhost" );
+		mongo = new MongoClient(Arrays.asList(
+				   new ServerAddress("mongo1",27017),
+				   new ServerAddress("mongo2",27017),
+				   new ServerAddress("mongo3",27017)));
+		System.out.println("HEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY");
 		CodecRegistry codecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(), CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
 		dataBase = mongo.getDatabase(DB_NAME).withCodecRegistry(codecRegistry);
 
+		dataBase.createCollection(DB_TABLE_PROFILES);
+		dataBase.createCollection(DB_TABLE_FOLLOWERS);
+		dataBase.createCollection(DB_TABLE_FOLLOWINGS);
+		
 		profiles = dataBase.getCollection(DB_TABLE_PROFILES, Profile.class);
 		followers = dataBase.getCollection(DB_TABLE_FOLLOWERS, Pair.class);
 		followings = dataBase.getCollection(DB_TABLE_FOLLOWINGS, Pair.class);
