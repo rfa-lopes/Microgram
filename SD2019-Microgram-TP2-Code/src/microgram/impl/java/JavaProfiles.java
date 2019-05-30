@@ -45,11 +45,11 @@ public final class JavaProfiles implements Profiles {
 	public Result<Void> createProfile(Profile profile) {
 		Result<Void> res = profilesManager.createProfile(profile);
 		
-		if(!res.isOK())
-			return res;
-		//TODO atualizar as tabelas de followers e followings
-		followers.put(profile.getUserId(), ConcurrentHashMap.newKeySet());
-		following.put(profile.getUserId(), ConcurrentHashMap.newKeySet());
+//		if(!res.isOK())
+//			return res;
+//		//TODO atualizar as tabelas de followers e followings
+//		followers.put(profile.getUserId(), ConcurrentHashMap.newKeySet());
+//		following.put(profile.getUserId(), ConcurrentHashMap.newKeySet());
 
 		return res;
 	}

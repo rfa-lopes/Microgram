@@ -11,17 +11,20 @@ public class RestProfilesResources extends RestResource implements RestProfiles 
 
 	protected final Profiles impl;
 
-	protected RestProfilesResources(Profiles impl) {
+	public RestProfilesResources(Profiles impl) {
 		this.impl = impl;
+		System.out.println("Hey1");
 	}
 
 	@Override
 	public Profile getProfile(String userId) {
+		System.out.println("Hey2");
 		return super.resultOrThrow(impl.getProfile(userId));
 	}
 
 	@Override
 	public void createProfile(Profile profile) {
+		System.out.println("Hey3");
 		super.resultOrThrow(impl.createProfile(profile));
 	}
 

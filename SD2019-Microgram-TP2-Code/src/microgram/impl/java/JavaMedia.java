@@ -22,7 +22,6 @@ public class JavaMedia implements Media {
 	public Result<String> upload(byte[] bytes) {
 		try {
 			Result<String> res = media.upload(bytes);
-			System.out.println(res.value());
 			return res;
 		} catch (Exception x) {
 			return error(INTERNAL_ERROR);
@@ -32,7 +31,6 @@ public class JavaMedia implements Media {
 	@Override
 	public Result<byte[]> download(String id) {
 		try {
-			System.out.println(ROOT_DIR + id);
 			Result<byte[]> res = media.download(ROOT_DIR + id);
 			return res;
 		} catch (Exception x) {
@@ -43,7 +41,6 @@ public class JavaMedia implements Media {
 	@Override
 	public Result<Void> delete(String id) {
 		try {
-			System.out.println(ROOT_DIR + id);
 			Result<Void> res = media.delete(ROOT_DIR + id);
 			return res;
 		} catch (Exception x) {

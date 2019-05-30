@@ -32,7 +32,6 @@ public  class ProfilesReplicator implements MicrogramOperationExecutor, Profiles
 			case CreateProfile: {
 				return localReplicaDB.createProfile( op.arg( Profile.class));
 			}case GetProfile: {
-				System.out.println("op.args");
 				return localReplicaDB.getProfile( op.arg(String.class));
 			}case DeleteProfile: {
 				

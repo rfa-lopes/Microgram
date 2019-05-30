@@ -16,6 +16,7 @@ import org.bson.codecs.pojo.PojoCodecProvider;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoWriteException;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
@@ -29,7 +30,7 @@ import utils.Pair;
 
 public class MongoProfiles implements Profiles {
 	
-	private static final String DB_NAME = "SD_TP2";
+	private static final String DB_NAME = "SDTP2";
 
 	private static final String DB_TABLE_PROFILES = "Profiles";
 	private static final String DB_TABLE_FOLLOWERS = "Followers";
@@ -49,43 +50,37 @@ public class MongoProfiles implements Profiles {
 	public static final String ID2 = "id2";
 
 	public MongoProfiles() {
-		mongo = new MongoClient(Arrays.asList(
-				   new ServerAddress("mongo1",27017),
-				   new ServerAddress("mongo2",27017),
-				   new ServerAddress("mongo3",27017)));
-		System.out.println("HEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY");
+		mongo = new MongoClient("mongo1");
 		CodecRegistry codecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(), CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
 		dataBase = mongo.getDatabase(DB_NAME).withCodecRegistry(codecRegistry);
-
-		dataBase.createCollection(DB_TABLE_PROFILES);
-		dataBase.createCollection(DB_TABLE_FOLLOWERS);
-		dataBase.createCollection(DB_TABLE_FOLLOWINGS);
 		
 		profiles = dataBase.getCollection(DB_TABLE_PROFILES, Profile.class);
-		followers = dataBase.getCollection(DB_TABLE_FOLLOWERS, Pair.class);
-		followings = dataBase.getCollection(DB_TABLE_FOLLOWINGS, Pair.class);
+//		followers = dataBase.getCollection(DB_TABLE_FOLLOWERS, Pair.class);
+//		followings = dataBase.getCollection(DB_TABLE_FOLLOWINGS, Pair.class);
 
 		profiles.createIndex(Indexes.ascending(USERID), new IndexOptions().unique(true));
-		followers.createIndex(Indexes.ascending(ID1,ID2), new IndexOptions().unique(true));
-		followings.createIndex(Indexes.ascending(ID1,ID2), new IndexOptions().unique(true));
+//		followers.createIndex(Indexes.ascending(ID1,ID2), new IndexOptions().unique(true));
+//		followings.createIndex(Indexes.ascending(ID1,ID2), new IndexOptions().unique(true));
 	}
 
 	@Override
 	public Result<Profile> getProfile(String userId) {
-		Pattern p = Pattern.compile("^" + userId);
-		Profile res = (Profile) profiles.find(Filters.regex("userId", p));
-		if(res == null)
-			return error(NOT_FOUND);
-		return ok(res);
+		String p = "^" + userId;
+		FindIterable<Profile> res = null;
+		res = profiles.find(Filters.regex("userId", p));
+		if(res.first() == null)
+			return Result.error(NOT_FOUND);
+		return ok(res.first());
 	}
 
 	@Override
 	public Result<Void> createProfile(Profile profile) {
 		try {
-			profiles.insertOne(profile);
+			//profiles.insertOne(profile);
+			System.out.println("profiles.insertOne(profile)");
 			return ok();
 		} catch( MongoWriteException x ) {
-			return error( CONFLICT );
+			return Result.error( CONFLICT );
 		}
 	}
 

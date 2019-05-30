@@ -13,7 +13,12 @@ import org.glassfish.jersey.server.ResourceConfig;
 import discovery.Discovery;
 import microgram.api.rest.RestPosts;
 import microgram.api.rest.RestProfiles;
+import microgram.impl.java.JavaPosts;
+import microgram.impl.java.JavaProfiles;
+import microgram.impl.mongo.MongoProfiles;
+import microgram.impl.rest.posts.RestPostsResources;
 import microgram.impl.rest.posts.replicated.ReplicatedPostsResources;
+import microgram.impl.rest.profiles.RestProfilesResources;
 import microgram.impl.rest.profiles.replicated.ReplicatedProfilesResources;
 import microgram.impl.rest.utils.GenericExceptionMapper;
 import microgram.impl.rest.utils.PrematchingRequestFilter;
@@ -43,8 +48,8 @@ public class MicrogramRestServer {
 	
 		ResourceConfig config = new ResourceConfig();
 
-		config.register(new ReplicatedPostsResources());
-		config.register(new ReplicatedProfilesResources());
+		config.register(new RestPostsResources(new JavaPosts()));
+		config.register(new RestProfilesResources(new JavaProfiles()));
 		
 		config.register(new PrematchingRequestFilter());
 		config.register(new GenericExceptionMapper());

@@ -17,7 +17,7 @@ public class RestResource {
 	protected <T> T resultOrThrow(Result<T> result) {
 		if (result.isOK())
 			return result.value();
-		else
+		else 
 			throw new WebApplicationException(statusCode(result));
 	}
 
