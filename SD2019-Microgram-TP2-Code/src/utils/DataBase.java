@@ -26,50 +26,61 @@ public class DataBase {
 	private static final String DB_TABLE_USERPOSTS = "UserPosts";
 
 	private static MongoClient mongo;
-
 	public static MongoDatabase dataBase;
-
-	public MongoCollection<Profile> profiles;
-	public MongoCollection<Pair> followers;
-	public MongoCollection<Pair> followings;
-
-	public MongoCollection<Post> posts;
-	public MongoCollection<Pair> likes;
-	public MongoCollection<Pair> userPosts;
 
 	public static final String USERID = "userId";
 	public static final String POSTID = "postId";
-	public static final String ID1 = "id1";
-	public static final String ID2 = "id2";
+	public static final String USERID2 = "userId2";
 
 
 	private DataBase() {
 		mongo = new MongoClient( "localhost" );
-		CodecRegistry codecRegistry = CodecRegistries.fromRegistries(MongoClient.getDefaultCodecRegistry(), CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));
+		CodecRegistry codecRegistry = CodecRegistries.fromRegistries( MongoClient.getDefaultCodecRegistry(), CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()) );
 		dataBase = mongo.getDatabase(DB_NAME).withCodecRegistry(codecRegistry);
-
-		profiles = dataBase.getCollection(DB_TABLE_PROFILES, Profile.class);
-		followers = dataBase.getCollection(DB_TABLE_FOLLOWERS, Pair.class);
-		followings = dataBase.getCollection(DB_TABLE_FOLLOWINGS, Pair.class);
-
-		posts = dataBase.getCollection(DB_TABLE_POSTS, Post.class);
-		likes = dataBase.getCollection(DB_TABLE_LIKES, Pair.class);
-		userPosts = dataBase.getCollection(DB_TABLE_USERPOSTS, Pair.class);
-		
-		//--------------------------------------------------------
-
-		profiles.createIndex(Indexes.ascending(USERID), new IndexOptions().unique(true));
-		followers.createIndex(Indexes.ascending(ID1,ID2), new IndexOptions().unique(true));
-		followings.createIndex(Indexes.ascending(ID1,ID2), new IndexOptions().unique(true));
-
-		posts.createIndex(Indexes.ascending(POSTID), new IndexOptions().unique(true));
-		likes.createIndex(Indexes.ascending(ID1,ID2), new IndexOptions().unique(true));
-		userPosts.createIndex(Indexes.ascending(ID1,ID2), new IndexOptions().unique(true));
 	}
 
 	public static DataBase init() {
 		return new DataBase();
 	}
+
+	public MongoCollection<Post> getPosts() {
+		MongoCollection<Post> posts = dataBase.getCollection(DB_TABLE_POSTS, Post.class);
+		posts.createIndex(Indexes.ascending(POSTID), new IndexOptions().unique(true));
+		return posts;
+	}
+
+	public MongoCollection<Pair> getLikes() {
+		MongoCollection<Pair> likes = dataBase.getCollection(DB_TABLE_LIKES, Pair.class);
+		likes.createIndex(Indexes.ascending(POSTID,USERID), new IndexOptions().unique(true));
+		return likes;
+	}
+
+
+	public MongoCollection<Pair> getUserPosts() {
+		MongoCollection<Pair> userPosts = dataBase.getCollection(DB_TABLE_USERPOSTS, Pair.class);
+		userPosts.createIndex(Indexes.ascending(USERID,POSTID), new IndexOptions().unique(true));
+		return userPosts;
+	}
+
+	public MongoCollection<Profile> getProfiles() {
+		MongoCollection<Profile> profiles = dataBase.getCollection(DB_TABLE_PROFILES, Profile.class);
+		profiles.createIndex(Indexes.ascending(USERID), new IndexOptions().unique(true));
+		return profiles;
+	}
+
+	public MongoCollection<Pair> getFollowers() {
+		MongoCollection<Pair> followers = dataBase.getCollection(DB_TABLE_FOLLOWERS, Pair.class);
+		followers.createIndex(Indexes.ascending(USERID,USERID2), new IndexOptions().unique(true));
+		return followers;
+	}
+
+	public MongoCollection<Pair> getFollowings() {
+		MongoCollection<Pair> followings = dataBase.getCollection(DB_TABLE_FOLLOWINGS, Pair.class);
+		followings.createIndex(Indexes.ascending(USERID,USERID2), new IndexOptions().unique(true));
+		return followings;
+	}
+
+
 
 
 }

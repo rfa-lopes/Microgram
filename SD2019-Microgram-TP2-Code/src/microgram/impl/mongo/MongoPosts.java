@@ -5,9 +5,13 @@ import static microgram.api.java.Result.ok;
 import static microgram.api.java.Result.ErrorCode.CONFLICT;
 import static microgram.api.java.Result.ErrorCode.NOT_FOUND;
 
+import java.util.LinkedList;
 import java.util.List;
 
+import org.bson.conversions.Bson;
+
 import com.mongodb.MongoWriteException;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 
@@ -23,15 +27,14 @@ public class MongoPosts implements Posts {
 	private MongoCollection<Post> posts;
 	private MongoCollection<Pair> likes;
 	private MongoCollection<Pair> userPosts;
-
 	private MongoCollection<Profile> profiles;
 
 	public MongoPosts() {
 		DataBase db = DataBase.init();
-		posts = db.posts;
-		likes = null;
-		userPosts = db.userPosts;
-		profiles = db.profiles;
+		posts = db.getPosts();
+		likes = db.getLikes();
+		userPosts = db.getUserPosts();
+		profiles = db.getProfiles();
 	}
 
 	@Override
@@ -54,8 +57,21 @@ public class MongoPosts implements Posts {
 
 	@Override
 	public Result<Void> deletePost(String postId) {
-		// TODO Auto-generated method stub
-		return null;
+		Bson pf = Filters.eq(DataBase.POSTID, postId);
+		Post post = posts.find(pf).first();
+		if(post == null)
+			return error(NOT_FOUND);
+
+		//fazer delete no Posts (apagar o postId)
+		posts.deleteOne(pf);
+
+		//Fazer delete no likes (postOd deixa de ter likes)
+		likes.deleteMany(pf);
+
+		//Fazer delete no userPosts (user deixa de ter aquele post)
+		userPosts.deleteOne(pf);
+
+		return ok();
 	}
 
 	@Override
@@ -72,7 +88,7 @@ public class MongoPosts implements Posts {
 			if (isLiked) 		//Profile mete like no post
 				likes.insertOne(new Pair(postId, userId));
 			else 				//Profile retira o like no post
-				likes.deleteOne(Filters.and(Filters.eq(DataBase.ID1, postId), Filters.eq(DataBase.ID2, userId)));
+				likes.deleteOne(Filters.and(Filters.eq(DataBase.POSTID, postId), Filters.eq(DataBase.USERID, userId)));
 
 		} catch( MongoWriteException x ) {
 			//Caso queira meter like num post que ja tem o like
@@ -85,22 +101,30 @@ public class MongoPosts implements Posts {
 	@Override
 	public Result<Boolean> isLiked(String postId, String userId) {
 		Post post = posts.find(Filters.eq(DataBase.POSTID, postId)).first();
+		Profile user = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
 
-		//Verificamos se o userId existe?
-
-		//Se o post nao existir retorna NOT_FOUND
-		if( post == null )
+		//Se o post ou o user nao existirem retorna NOT_FOUND
+		if( post == null || user == null )
 			return error( NOT_FOUND );
 
-		Pair res = likes.find(Filters.and(Filters.eq(DataBase.ID1, postId), Filters.eq(DataBase.ID2, userId))).first();
+		Pair res = likes.find(Filters.and(Filters.eq(DataBase.POSTID, postId), Filters.eq(DataBase.USERID, userId))).first();
 
 		return ok(res != null);
 	}
 
 	@Override
 	public Result<List<String>> getPosts(String userId) {
-		// TODO Auto-generated method stub
-		return null;
+		Bson uf = Filters.eq(DataBase.USERID, userId);
+		Profile u = profiles.find(uf).first();
+		if(u == null)
+			return error(NOT_FOUND);
+
+		List<String> res = new LinkedList<String>();
+		FindIterable<Pair> up = userPosts.find(uf);
+		for(Pair p : up)
+			res.add(p.getId2());
+
+		return ok(res);
 	}
 
 	@Override

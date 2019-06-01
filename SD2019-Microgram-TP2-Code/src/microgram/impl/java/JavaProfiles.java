@@ -67,7 +67,7 @@ public final class JavaProfiles implements Profiles {
 			followers.getOrDefault(followee, DUMMY_SET).remove(userId);
 	
 		//users.remove(userId);
-		//TODO realizar invocação remota pois iston ao esta bem
+		//TODO realizar invocação remota pois isto nao esta bem
 		//Posts.deleteAllUserPosts(userId);
 		
 		return ok();
