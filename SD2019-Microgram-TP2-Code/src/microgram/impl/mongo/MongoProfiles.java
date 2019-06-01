@@ -5,6 +5,7 @@ import static microgram.api.java.Result.ok;
 import static microgram.api.java.Result.ErrorCode.NOT_FOUND;
 import static microgram.api.java.Result.ErrorCode.CONFLICT;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -65,19 +66,17 @@ public class MongoProfiles implements Profiles {
 
 	@Override
 	public Result<Profile> getProfile(String userId) {
-		String p = "^" + userId;
-		FindIterable<Profile> res = null;
-		res = profiles.find(Filters.regex("userId", p));
-		if(res.first() == null)
+		Profile found = null;
+		found = profiles.find(Filters.eq(USERID, userId)).first();
+		if(found == null)
 			return Result.error(NOT_FOUND);
-		return ok(res.first());
+		return ok(found);
 	}
 
 	@Override
 	public Result<Void> createProfile(Profile profile) {
 		try {
-			//profiles.insertOne(profile);
-			System.out.println("profiles.insertOne(profile)");
+			profiles.insertOne(profile);
 			return ok();
 		} catch( MongoWriteException x ) {
 			return Result.error( CONFLICT );
@@ -95,8 +94,15 @@ public class MongoProfiles implements Profiles {
 
 	@Override
 	public Result<List<Profile>> search(String prefix) {
-		// TODO Auto-generated method stub
-		return null;
+		String p = "^" + prefix;
+		FindIterable<Profile> found = null;
+		found = profiles.find(Filters.eq(USERID, prefix));
+		if(found == null)
+			return Result.error(NOT_FOUND);
+		List<Profile> resList = new ArrayList<Profile>();
+		for(Profile pro : found)
+			resList.add(pro);
+		return ok(resList);
 	}
 
 	@Override

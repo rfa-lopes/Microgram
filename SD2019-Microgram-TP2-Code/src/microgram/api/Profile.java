@@ -25,6 +25,8 @@ public class Profile {
 	int following;
 	int followers;
 	
+	public Profile() {}
+	
 	@BsonCreator
 	public Profile(@BsonProperty("userId")String userId, @BsonProperty("fullName")String fullName, @BsonProperty("photoUrl")String photoUrl) {
 		this.userId = userId;

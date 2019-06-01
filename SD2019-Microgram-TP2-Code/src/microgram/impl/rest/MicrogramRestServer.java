@@ -55,7 +55,6 @@ public class MicrogramRestServer {
 		config.register(new GenericExceptionMapper());
 
 		JdkHttpServerFactory.createHttpServer(URI.create(serverURI.replace(ip, "0.0.0.0")), config, SSLContext.getDefault());
-
 		Log.fine(String.format("Posts+Profiles Combined Rest Server ready @ %s\n", serverURI));
 	}
 

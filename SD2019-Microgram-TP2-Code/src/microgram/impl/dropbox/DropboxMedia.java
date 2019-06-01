@@ -257,17 +257,18 @@ public class DropboxMedia implements Media{
 				return Result.error(Result.ErrorCode.NOT_FOUND);
 			}else if(r.getCode() == 200) {
 				InputStream in = r.getStream();
-				ByteArrayOutputStream output = new ByteArrayOutputStream();
-				byte[] arr;
 				int size =Integer.parseInt(r.getHeader("Content-Length"));
-				int counter = 0;
+				byte[] arr = new byte[size];
+				int counter = 0, curr = -1;
 				while(counter < size) {
-					arr = new byte[1024];
-					counter += in.read(arr);
-					output.write(arr,0,arr.length); // pois se assim nao fosse podia estar a escrever lixo desnecessariamente
+					//isto so acontece se existir algum erro pelo meio
+					if(curr == 0)
+						return Result.error(Result.ErrorCode.INTERNAL_ERROR);
+					curr += in.read(arr, counter, size - counter);
+					counter += curr;
 				}
 				System.out.println("Dropbox file was downloaded with success");
-				return Result.ok(output.toByteArray());
+				return Result.ok(arr);
 			}else {
 				System.err.println("Unexpected error HTTP: " + r.getCode());
 				System.err.println(r.getBody());
