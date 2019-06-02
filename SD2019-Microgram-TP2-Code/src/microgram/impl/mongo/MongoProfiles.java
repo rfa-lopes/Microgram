@@ -94,11 +94,9 @@ public class MongoProfiles implements Profiles {
 
 	@Override
 	public Result<List<Profile>> search(String prefix) {
-		//String p = "^" + prefix; //TODO: O que e isto?
-		FindIterable<Profile> found = profiles.find(Filters.eq(DataBase.USERID, prefix));
-		if(found == null)
-			return error(NOT_FOUND);
-		
+		String p = "^" + prefix;
+		FindIterable<Profile> found = profiles.find(Filters.regex(DataBase.USERID, p));
+
 		List<Profile> res = new LinkedList<Profile>();
 		for(Profile pro : found)
 			res.add(pro);

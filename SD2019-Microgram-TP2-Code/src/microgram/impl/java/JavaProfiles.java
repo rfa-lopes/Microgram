@@ -21,12 +21,6 @@ public final class JavaProfiles implements Profiles {
 	
 	static JavaProfiles Profiles;
 	
-	static final Set<String> DUMMY_SET = ConcurrentHashMap.newKeySet();
-
-	final Map<String, Profile> users = new ConcurrentHashMap<>();
-	final Map<String, Set<String>> followers = new ConcurrentHashMap<>();
-	final Map<String, Set<String>> following = new ConcurrentHashMap<>();
-	
 	private MongoProfiles profilesManager;
 		
 	public JavaProfiles() {
@@ -60,23 +54,23 @@ public final class JavaProfiles implements Profiles {
 		if(!res.isOK())
 			return res;
 		//TODO atualizar as tabelas de followers e followings
-		for (String follower : followers.remove(userId))
-			following.getOrDefault(follower, DUMMY_SET).remove(userId);
-	
-		for (String followee : following.remove(userId))
-			followers.getOrDefault(followee, DUMMY_SET).remove(userId);
+//		for (String follower : followers.remove(userId))
+//			following.getOrDefault(follower, DUMMY_SET).remove(userId);
+//	
+//		for (String followee : following.remove(userId))
+//			followers.getOrDefault(followee, DUMMY_SET).remove(userId);
 	
 		//users.remove(userId);
 		//TODO realizar invocação remota pois isto nao esta bem
 		//Posts.deleteAllUserPosts(userId);
 		
-		return ok();
+		return res;
 	}
 
 	@Override
 	public Result<List<Profile>> search(String prefix) {
-		return null;
-		//return ok(users.values().stream().filter(p -> p.getUserId().startsWith(prefix)).collect(Collectors.toList()));
+		Result<List<Profile>> res = profilesManager.search(prefix);
+		return res;
 	}
 
 
@@ -113,6 +107,7 @@ public final class JavaProfiles implements Profiles {
 	}
 
 	Set<String> following(String userId) {
-		return following.get( userId );
+		return null;
+		//return following.get( userId );
 	}
 }
