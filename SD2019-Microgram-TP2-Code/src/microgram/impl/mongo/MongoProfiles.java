@@ -81,11 +81,11 @@ public class MongoProfiles implements Profiles {
 
 		//Fazer delete na tabela followers (os followers do user / os que o user faz follow)
 		followers.deleteMany(uf);
-		followers.deleteMany(Filters.eq(DataBase.USERID2, userId));
+		followers.deleteMany(Filters.eq(DataBase.ID2, userId));
 
 		//Fazer delete na tabela followings (os followings do user / os que o user faz following)
 		followings.deleteMany(uf);
-		followings.deleteMany(Filters.eq(DataBase.USERID2, userId));
+		followings.deleteMany(Filters.eq(DataBase.ID2, userId));
 
 		return ok();
 	}
@@ -107,24 +107,18 @@ public class MongoProfiles implements Profiles {
 		Profile u1 = profiles.find(Filters.eq(DataBase.USERID, userId1)).first();
 		Profile u2 = profiles.find(Filters.eq(DataBase.USERID, userId2)).first();
 
-		//Profiles nao existem
 		if(u1 == null || u2 == null)
 			return error(NOT_FOUND);
 
 		try {
-			//user1 quer seguir user2
-			if( isFollowing ) {
+			if( isFollowing ) { //user1 quer seguir user2
 				followers.insertOne( new Pair(userId2, userId1) );
 				followings.insertOne( new Pair(userId1, userId2) );
-			}
-			//user1 quer deixar de seguir user2
-			else {
-				followers.deleteOne(Filters.and(Filters.eq(DataBase.USERID, userId2), Filters.eq(DataBase.USERID2, userId1) ));
-				followings.deleteOne(Filters.and(Filters.eq(DataBase.USERID, userId1), Filters.eq(DataBase.USERID2, userId2) ));
+			}else { //user1 quer deixar de seguir user2
+				followers.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId2), Filters.eq(DataBase.ID2, userId1) ));
+				followings.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2) ));
 			}
 		} catch( MongoWriteException x ) {
-			//Caso queira seguir alguem que ja segue
-			//Ou deixar de seguir alguem que ja nao segue
 			return error( CONFLICT );
 		}
 		return ok();
@@ -135,14 +129,11 @@ public class MongoProfiles implements Profiles {
 		Profile u1 = profiles.find(Filters.eq(DataBase.USERID, userId1)).first();
 		Profile u2 = profiles.find(Filters.eq(DataBase.USERID, userId2)).first();
 
-		//Profiles nao existem
 		if(u1 == null || u2 == null)
 			return error(NOT_FOUND);
-
-		//Se userId1 seguir userId2 vai returnar um par
-		//Se nao seguir, retorna null (porque nao existe na tabela)
-		Pair res = followings.find(Filters.and(Filters.eq(DataBase.USERID, userId1), Filters.eq(DataBase.USERID2, userId2))).first();
-		return ok(res != null);
+		
+		long count = followings.countDocuments(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2)));
+		return ok(count != 0);
 	}
 
 }
