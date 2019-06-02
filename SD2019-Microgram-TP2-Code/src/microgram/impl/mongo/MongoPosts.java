@@ -28,7 +28,6 @@ public class MongoPosts implements Posts {
 
 	private MongoCollection<Post> posts;
 	private MongoCollection<Pair> likes;
-	private MongoCollection<Pair> userPosts;
 	private MongoCollection<Profile> profiles;
 	private MongoCollection<Pair> followings;
 
@@ -36,18 +35,19 @@ public class MongoPosts implements Posts {
 		DataBase db = DataBase.init();
 		posts = db.getPosts();
 		likes = db.getLikes();
-		userPosts = db.getUserPosts();
 		profiles = db.getProfiles();
 		followings = db.getFollowings();
 	}
 
 	@Override
 	public Result<Post> getPost(String postId) {
-		Post res = posts.find(Filters.eq(DataBase.POSTID, postId)).first();
+		Bson postFilter = Filters.eq(DataBase.POSTID, postId);
+		Post res = posts.find(postFilter).first();
 		if(res == null)
 			return error(NOT_FOUND);
 		
-		AtualizePost()
+		//Atualizar as estatisticas
+		res.setLikes( (int) likes.countDocuments(postFilter) );
 		
 		return ok(res);
 	}
@@ -61,7 +61,6 @@ public class MongoPosts implements Posts {
 				return error(NOT_FOUND);
 
 			posts.insertOne(post);
-			userPosts.insertOne(new Pair(userId, post.getPostId()));
 			return ok();
 		} catch( MongoWriteException x ) {
 			return error( CONFLICT );
@@ -83,9 +82,6 @@ public class MongoPosts implements Posts {
 
 		//Fazer delete no likes (postOd deixa de ter likes)
 		likes.deleteMany(pfilID);
-
-		//Fazer delete no userPosts (user deixa de ter aquele post)
-		userPosts.deleteOne(pfilID);
 
 		return ok();
 	}
@@ -137,9 +133,9 @@ public class MongoPosts implements Posts {
 			return error(NOT_FOUND);
 
 		List<String> res = new LinkedList<String>();
-		FindIterable<Pair> userPostsList = userPosts.find(Filters.eq(DataBase.ID1, userId));
-		for(Pair p : userPostsList)
-			res.add(p.getId2());
+		FindIterable<Post> userPostsList = posts.find(Filters.eq("ownerId", userId));
+		for(Post p : userPostsList)
+			res.add(p.getPostId());
 
 		return ok(res);
 	}
@@ -156,9 +152,9 @@ public class MongoPosts implements Posts {
 		FindIterable<Pair> foll = followings.find(Filters.eq(DataBase.ID1, userId));
 
 		for(Pair f : foll) {
-			FindIterable<Pair> userposts = userPosts.find(Filters.eq(DataBase.ID1, f.getId2()));
-			for(Pair p : userposts)
-				res.add(p.getId2());
+			FindIterable<Post> userposts = posts.find(Filters.eq("ownerId", f.getId2()));
+			for(Post p : userposts)
+				res.add(p.getPostId());
 		}
 
 		return ok(res);

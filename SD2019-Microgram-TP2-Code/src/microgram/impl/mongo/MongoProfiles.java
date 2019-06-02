@@ -29,7 +29,6 @@ public class MongoProfiles implements Profiles {
 	private MongoCollection<Pair> followers;
 	private MongoCollection<Pair> followings;
 	private MongoCollection<Post> posts;
-	private MongoCollection<Pair> userPosts;
 	private MongoCollection<Pair> likes;
 	static MongoProfiles mProfiles;
 
@@ -39,16 +38,22 @@ public class MongoProfiles implements Profiles {
 		followers = db.getFollowers();
 		followings = db.getFollowings();
 		posts = db.getPosts();
-		userPosts = db.getUserPosts();
 		likes = db.getLikes();
 		mProfiles = this;
 	}
 
 	@Override
 	public Result<Profile> getProfile(String userId) {
-		Profile res = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
+		Bson userFilter = Filters.eq(DataBase.USERID, userId);
+		Profile res = profiles.find(userFilter).first();
 		if(res == null)
 			return error(NOT_FOUND);
+
+		//Atualizar as estatisticas
+		res.setFollowers((int)followers.countDocuments(userFilter));
+		res.setFollowing((int)followings.countDocuments(userFilter));
+		res.setPosts( (int)posts.countDocuments(Filters.eq("ownerId", userId)) );
+
 		return ok(res);
 	}
 
@@ -61,7 +66,7 @@ public class MongoProfiles implements Profiles {
 			return error( CONFLICT );
 		}
 	}
-	
+
 	public Result<Void> updateProfile(Profile profile) {
 		try {
 			profiles.updateOne(Filters.eq(DataBase.USERID, profile.getUserId()), 
@@ -87,9 +92,6 @@ public class MongoProfiles implements Profiles {
 
 		//Fazer delete na tabela likes (os likes do profile)
 		likes.deleteMany(Filters.eq(DataBase.USERID, userId));
-
-		//Fazer delete na tabela userPosts (os posts do user)
-		userPosts.deleteMany(uf);
 
 		//Fazer delete na tabela followers (os followers do user / os que o user faz follow)
 		followers.deleteMany(uf);
@@ -142,7 +144,7 @@ public class MongoProfiles implements Profiles {
 
 		if(u1 == null || u2 == null)
 			return error(NOT_FOUND);
-		
+
 		long count = followings.countDocuments(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2)));
 		return ok(count != 0);
 	}

@@ -23,7 +23,6 @@ public class DataBase {
 
 	private static final String DB_TABLE_POSTS = "Posts";
 	private static final String DB_TABLE_LIKES = "Likes";
-	private static final String DB_TABLE_USERPOSTS = "UserPosts";
 
 	private static MongoClient mongo;
 	public static MongoDatabase dataBase;
@@ -56,12 +55,6 @@ public class DataBase {
 		return likes;
 	}
 
-
-	public MongoCollection<Pair> getUserPosts() {
-		MongoCollection<Pair> userPosts = dataBase.getCollection(DB_TABLE_USERPOSTS, Pair.class);
-		userPosts.createIndex(Indexes.ascending(ID1,ID2), new IndexOptions().unique(true));
-		return userPosts;
-	}
 
 	public MongoCollection<Profile> getProfiles() {
 		MongoCollection<Profile> profiles = dataBase.getCollection(DB_TABLE_PROFILES, Profile.class);
