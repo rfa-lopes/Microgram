@@ -41,14 +41,14 @@ public class MongoPosts implements Posts {
 
 	@Override
 	public Result<Post> getPost(String postId) {
-		Post res = posts.find(Filters.eq(DataBase.POSTID, postId)).first();
-		if(res == null)
+		try {
+			Post res = posts.find(Filters.eq(DataBase.POSTID, postId)).first();
+			//Atualizar as estatisticas
+			res.setLikes( (int) likes.countDocuments(Filters.eq(DataBase.ID1, postId)) );
+			return ok(res);
+		}catch(MongoWriteException x) {
 			return error(NOT_FOUND);
-		
-		//Atualizar as estatisticas
-		res.setLikes( (int) likes.countDocuments(Filters.eq(DataBase.ID1, postId)) );
-		
-		return ok(res);
+		}
 	}
 
 	@Override
@@ -69,17 +69,14 @@ public class MongoPosts implements Posts {
 	public Result<Void> deletePost(String postId) {
 		Bson pfilPOSTID = Filters.eq(DataBase.POSTID, postId);
 		Post post = posts.find(pfilPOSTID).first();
-
 		if(post == null)
 			return error(NOT_FOUND);
-
-		Bson pfilID = Filters.eq(DataBase.ID1, postId);
 
 		//fazer delete no Posts (apagar o postId)
 		posts.deleteOne(pfilPOSTID);
 
 		//Fazer delete no likes (postOd deixa de ter likes)
-		likes.deleteMany(pfilID);
+		likes.deleteMany(Filters.eq(DataBase.ID1, postId));
 
 		return ok();
 	}
@@ -93,17 +90,17 @@ public class MongoPosts implements Posts {
 		//Se o post nao existir || o perfil nao existir retorna NOT_FOUND
 		if( post == null || profile == null)
 			return error( NOT_FOUND );
-
-		try {
-			if (isLiked)			//Profile mete like no post
+		
+		if (isLiked)			//Profile mete like no post
+			try{
 				likes.insertOne(new Pair(postId, userId));
-			else 					//Profile retira o like no post
-				likes.deleteOne(Filters.and(Filters.eq(DataBase.ID1, postId), Filters.eq(DataBase.ID2, userId)));
-
-		} catch( MongoWriteException x ) {
-			//Caso queira meter like num post que ja tem o like
-			//Caso queira retirar um like que nao existe
-			return error( CONFLICT );
+			}catch(MongoWriteException x) {
+				return error( CONFLICT );
+			}
+		else { 					//Profile retira o like no post
+			Pair res = likes.find(Filters.and(Filters.eq(DataBase.ID1, postId), Filters.eq(DataBase.ID2, userId))).first();
+			if(res == null) return error( NOT_FOUND );
+			likes.deleteOne(Filters.and(Filters.eq(DataBase.ID1, postId), Filters.eq(DataBase.ID2, userId)));
 		}
 		return ok();
 	}

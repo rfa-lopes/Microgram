@@ -31,6 +31,7 @@ public class DataBase {
 	public static final String POSTID = "postId";
 	public static final String ID1 = "id1";
 	public static final String ID2 = "id2";
+	public static final String OWNERID = "ownerId";
 
 
 	private DataBase() {
