@@ -28,6 +28,7 @@ public class MongoPosts implements Posts {
 	private MongoCollection<Pair> likes;
 	private MongoCollection<Pair> userPosts;
 	private MongoCollection<Profile> profiles;
+	private MongoCollection<Pair> followings;
 
 	public MongoPosts() {
 		DataBase db = DataBase.init();
@@ -35,6 +36,7 @@ public class MongoPosts implements Posts {
 		likes = db.getLikes();
 		userPosts = db.getUserPosts();
 		profiles = db.getProfiles();
+		followings = db.getFollowings();
 	}
 
 	@Override
@@ -57,19 +59,22 @@ public class MongoPosts implements Posts {
 
 	@Override
 	public Result<Void> deletePost(String postId) {
-		Bson pf = Filters.eq(DataBase.POSTID, postId);
-		Post post = posts.find(pf).first();
+		Bson pfilPOSTID = Filters.eq(DataBase.POSTID, postId);
+
+		Post post = posts.find(pfilPOSTID).first();
 		if(post == null)
 			return error(NOT_FOUND);
 
+		Bson pfilID = Filters.eq(DataBase.ID1, postId);
+
 		//fazer delete no Posts (apagar o postId)
-		posts.deleteOne(pf);
+		posts.deleteOne(pfilPOSTID);
 
 		//Fazer delete no likes (postOd deixa de ter likes)
-		likes.deleteMany(pf);
+		likes.deleteMany(pfilID);
 
 		//Fazer delete no userPosts (user deixa de ter aquele post)
-		userPosts.deleteOne(pf);
+		userPosts.deleteOne(pfilID);
 
 		return ok();
 	}
@@ -88,7 +93,7 @@ public class MongoPosts implements Posts {
 			if (isLiked) 		//Profile mete like no post
 				likes.insertOne(new Pair(postId, userId));
 			else 				//Profile retira o like no post
-				likes.deleteOne(Filters.and(Filters.eq(DataBase.POSTID, postId), Filters.eq(DataBase.USERID, userId)));
+				likes.deleteOne(Filters.and(Filters.eq(DataBase.ID1, postId), Filters.eq(DataBase.ID2, userId)));
 
 		} catch( MongoWriteException x ) {
 			//Caso queira meter like num post que ja tem o like
@@ -107,21 +112,22 @@ public class MongoPosts implements Posts {
 		if( post == null || user == null )
 			return error( NOT_FOUND );
 
-		Pair res = likes.find(Filters.and(Filters.eq(DataBase.POSTID, postId), Filters.eq(DataBase.USERID, userId))).first();
+		Pair res = likes.find(Filters.and(Filters.eq(DataBase.ID1, postId), Filters.eq(DataBase.ID2, userId))).first();
 
 		return ok(res != null);
 	}
 
 	@Override
 	public Result<List<String>> getPosts(String userId) {
-		Bson uf = Filters.eq(DataBase.USERID, userId);
-		Profile u = profiles.find(uf).first();
-		if(u == null)
+
+		Profile user = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
+
+		if(user == null)
 			return error(NOT_FOUND);
 
 		List<String> res = new LinkedList<String>();
-		FindIterable<Pair> up = userPosts.find(uf);
-		for(Pair p : up)
+		FindIterable<Pair> userPostsList = userPosts.find(Filters.eq(DataBase.ID1, userId));
+		for(Pair p : userPostsList)
 			res.add(p.getId2());
 
 		return ok(res);
@@ -129,8 +135,22 @@ public class MongoPosts implements Posts {
 
 	@Override
 	public Result<List<String>> getFeed(String userId) {
-		// TODO Auto-generated method stub
-		return null;
+
+		Profile user = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
+		if(user == null)
+			return error(NOT_FOUND);
+
+		List<String> res = new LinkedList<String>();
+
+		FindIterable<Pair> foll = followings.find(Filters.eq(DataBase.ID1, userId));
+
+		for(Pair f : foll) {
+			FindIterable<Pair> userposts = userPosts.find(Filters.eq(DataBase.ID1, f.getId2()));
+			for(Pair p : userposts)
+				res.add(p.getId2());
+		}
+
+		return ok(res);
 	}
 
 }
