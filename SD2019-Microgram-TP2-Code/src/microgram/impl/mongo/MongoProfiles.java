@@ -70,10 +70,8 @@ public class MongoProfiles implements Profiles {
 		profiles.deleteOne(uf);
 
 		//Fazer delete na tabela Posts (os posts do profile)
-		//TODO: posts.deleteMany(ownerId); //Como e que vou buscar o post com o ownerId, nao ha maneira de ir logo buscar na tabela posts usando o ownerid?
 		FindIterable<Pair> up = userPosts.find(uf);
-		for(Pair p : up)
-			posts.deleteOne(Filters.eq(DataBase.POSTID, p.getId2()));
+		posts.deleteMany(Filters.eq("ownerId", userId));
 
 		//Fazer delete na tabela likes (os likes do profile)
 		likes.deleteMany(Filters.eq(DataBase.USERID, userId));
