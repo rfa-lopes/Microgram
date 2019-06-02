@@ -44,14 +44,13 @@ public class MongoProfiles implements Profiles {
 
 	@Override
 	public Result<Profile> getProfile(String userId) {
-		Bson userFilter = Filters.eq(DataBase.USERID, userId);
-		Profile res = profiles.find(userFilter).first();
+		Profile res = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
 		if(res == null)
 			return error(NOT_FOUND);
 
 		//Atualizar as estatisticas
-		res.setFollowers((int)followers.countDocuments(userFilter));
-		res.setFollowing((int)followings.countDocuments(userFilter));
+		res.setFollowers((int)followers.countDocuments(Filters.eq(DataBase.ID1, userId)));
+		res.setFollowing((int)followings.countDocuments(Filters.eq(DataBase.ID1, userId)));
 		res.setPosts( (int)posts.countDocuments(Filters.eq("ownerId", userId)) );
 
 		return ok(res);

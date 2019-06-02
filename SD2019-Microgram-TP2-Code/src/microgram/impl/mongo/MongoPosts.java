@@ -41,13 +41,12 @@ public class MongoPosts implements Posts {
 
 	@Override
 	public Result<Post> getPost(String postId) {
-		Bson postFilter = Filters.eq(DataBase.POSTID, postId);
-		Post res = posts.find(postFilter).first();
+		Post res = posts.find(Filters.eq(DataBase.POSTID, postId)).first();
 		if(res == null)
 			return error(NOT_FOUND);
 		
 		//Atualizar as estatisticas
-		res.setLikes( (int) likes.countDocuments(postFilter) );
+		res.setLikes( (int) likes.countDocuments(Filters.eq(DataBase.ID1, postId)) );
 		
 		return ok(res);
 	}
@@ -59,9 +58,8 @@ public class MongoPosts implements Posts {
 			Result<Profile> res = mProfiles.getProfile(userId);
 			if( !res.isOK() )
 				return error(NOT_FOUND);
-
 			posts.insertOne(post);
-			return ok();
+			return ok(post.getPostId());
 		} catch( MongoWriteException x ) {
 			return error( CONFLICT );
 		}
