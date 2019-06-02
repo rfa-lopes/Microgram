@@ -12,17 +12,14 @@ import microgram.impl.mongo.MongoProfiles;
 
 public final class JavaProfiles implements Profiles {
 	
-	static JavaProfiles Profiles;
 	
 	private MongoProfiles profilesManager;
 		
 	public JavaProfiles() {
 		profilesManager = new MongoProfiles();
-		Profiles = this;
 	}
 	
 	@Override
-	
 	public Result<Profile> getProfile(String userId) {
 		Result<Profile> res = profilesManager.getProfile(userId);
 		return res;

@@ -8,16 +8,11 @@ import microgram.api.java.Result;
 import microgram.impl.mongo.MongoPosts;
 
 public final class JavaPosts implements Posts {
-
-	static JavaPosts Posts;
-	
-	//private static final Set<String> EMPTY_SET = new HashSet<>();
 	
 	private MongoPosts postsManager;
 	
 	public JavaPosts() {
 		postsManager = new MongoPosts();
-		Posts = this;
 	}
 
 	@Override
@@ -55,14 +50,4 @@ public final class JavaPosts implements Posts {
 	public Result<List<String>> getFeed(String userId) {
 		return postsManager.getFeed(userId);
 	}
-
-//	int getUserPostsStats( String userId) {
-//		return userPosts.getOrDefault(userId, EMPTY_SET).size();
-//	}
-//	
-//	void deleteAllUserPosts(String userId) {
-//		for( String postId : userPosts.getOrDefault(userId, EMPTY_SET))
-//			deletePost( postId );
-//	}
-
 }

@@ -8,6 +8,7 @@ import static microgram.api.java.Result.ErrorCode.CONFLICT;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import com.mongodb.MongoWriteException;
@@ -30,6 +31,7 @@ public class MongoProfiles implements Profiles {
 	private MongoCollection<Post> posts;
 	private MongoCollection<Pair> userPosts;
 	private MongoCollection<Pair> likes;
+	static MongoProfiles mProfiles;
 
 	public MongoProfiles() {
 		DataBase db = DataBase.init();
@@ -39,6 +41,7 @@ public class MongoProfiles implements Profiles {
 		posts = db.getPosts();
 		userPosts = db.getUserPosts();
 		likes = db.getLikes();
+		mProfiles = this;
 	}
 
 	@Override
@@ -53,6 +56,16 @@ public class MongoProfiles implements Profiles {
 	public Result<Void> createProfile(Profile profile) {
 		try {
 			profiles.insertOne(profile);
+			return ok();
+		} catch( MongoWriteException x ) {
+			return error( CONFLICT );
+		}
+	}
+	
+	public Result<Void> updateProfile(Profile profile) {
+		try {
+			profiles.updateOne(Filters.eq(DataBase.USERID, profile.getUserId()), 
+					new Document("$set", profile));
 			return ok();
 		} catch( MongoWriteException x ) {
 			return error( CONFLICT );
@@ -113,9 +126,11 @@ public class MongoProfiles implements Profiles {
 			if( isFollowing ) { //user1 quer seguir user2
 				followers.insertOne( new Pair(userId2, userId1) );
 				followings.insertOne( new Pair(userId1, userId2) );
+				updateProfileStats(u1, u2, 1);
 			}else { //user1 quer deixar de seguir user2
 				followers.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId2), Filters.eq(DataBase.ID2, userId1)));
 				followings.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2)));
+				updateProfileStats(u1, u2, -1);
 			}
 		} catch( MongoWriteException x ) {
 			return error( CONFLICT );
@@ -134,5 +149,11 @@ public class MongoProfiles implements Profiles {
 		long count = followings.countDocuments(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2)));
 		return ok(count != 0);
 	}
-
+	
+	private void updateProfileStats(Profile u1, Profile u2, int update) {
+		u2.setFollowers(u2.getFollowers() + update);
+		u1.setFollowing(u1.getFollowing() + update);
+		updateProfile(u1);
+		updateProfile(u2);
+	}
 }

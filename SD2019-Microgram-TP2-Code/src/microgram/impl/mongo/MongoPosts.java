@@ -4,10 +4,13 @@ import static microgram.api.java.Result.error;
 import static microgram.api.java.Result.ok;
 import static microgram.api.java.Result.ErrorCode.CONFLICT;
 import static microgram.api.java.Result.ErrorCode.NOT_FOUND;
+import static microgram.impl.mongo.MongoProfiles.mProfiles;
+
 
 import java.util.LinkedList;
 import java.util.List;
 
+import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import com.mongodb.MongoWriteException;
@@ -50,7 +53,15 @@ public class MongoPosts implements Posts {
 	@Override
 	public Result<String> createPost(Post post) {
 		try {
+			String user = post.getOwnerId();
+			Result<Profile> res = mProfiles.getProfile(user);
+			if(!res.isOK())
+				return error(NOT_FOUND);
+			
 			posts.insertOne(post);
+			userPosts.insertOne(new Pair(user, post.getPostId()));
+			updateProfileStats(res.value(), 1);
+			
 			return ok();
 		} catch( MongoWriteException x ) {
 			return error( CONFLICT );
@@ -60,9 +71,11 @@ public class MongoPosts implements Posts {
 	@Override
 	public Result<Void> deletePost(String postId) {
 		Bson pfilPOSTID = Filters.eq(DataBase.POSTID, postId);
-
 		Post post = posts.find(pfilPOSTID).first();
-		if(post == null)
+		
+		String user = post.getOwnerId();
+		Result<Profile> res = mProfiles.getProfile(user);
+		if(post == null || !res.isOK())
 			return error(NOT_FOUND);
 
 		Bson pfilID = Filters.eq(DataBase.ID1, postId);
@@ -75,6 +88,8 @@ public class MongoPosts implements Posts {
 
 		//Fazer delete no userPosts (user deixa de ter aquele post)
 		userPosts.deleteOne(pfilID);
+		
+		updateProfileStats(res.value(), -1);
 
 		return ok();
 	}
@@ -90,11 +105,13 @@ public class MongoPosts implements Posts {
 			return error( NOT_FOUND );
 
 		try {
-			if (isLiked) 		//Profile mete like no post
+			if (isLiked){//Profile mete like no post
 				likes.insertOne(new Pair(postId, userId));
-			else 				//Profile retira o like no post
+				updatePostStats(post, 1);
+			}else { 				//Profile retira o like no post
 				likes.deleteOne(Filters.and(Filters.eq(DataBase.ID1, postId), Filters.eq(DataBase.ID2, userId)));
-
+				updatePostStats(post, -1);
+			}
 		} catch( MongoWriteException x ) {
 			//Caso queira meter like num post que ja tem o like
 			//Caso queira retirar um like que nao existe
@@ -152,5 +169,15 @@ public class MongoPosts implements Posts {
 
 		return ok(res);
 	}
-
+	
+	private void updateProfileStats(Profile newP, int update) {
+		newP.setPosts(newP.getPosts()+ update);
+		mProfiles.updateProfile(newP);
+	}
+	
+	private void updatePostStats(Post post, int update) {
+		post.setLikes(post.getLikes()+1);
+		posts.updateOne(Filters.eq(DataBase.POSTID, post.getPostId()), 
+				new Document("$set", post));
+	}
 }
