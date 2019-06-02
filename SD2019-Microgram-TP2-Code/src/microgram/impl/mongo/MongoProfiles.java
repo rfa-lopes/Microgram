@@ -83,7 +83,6 @@ public class MongoProfiles implements Profiles {
 		profiles.deleteOne(uf);
 
 		//Fazer delete na tabela Posts (os posts do profile)
-		FindIterable<Pair> up = userPosts.find(uf);
 		posts.deleteMany(Filters.eq("ownerId", userId));
 
 		//Fazer delete na tabela likes (os likes do profile)
@@ -126,11 +125,9 @@ public class MongoProfiles implements Profiles {
 			if( isFollowing ) { //user1 quer seguir user2
 				followers.insertOne( new Pair(userId2, userId1) );
 				followings.insertOne( new Pair(userId1, userId2) );
-				updateProfileStats(u1, u2, 1);
 			}else { //user1 quer deixar de seguir user2
 				followers.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId2), Filters.eq(DataBase.ID2, userId1)));
 				followings.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2)));
-				updateProfileStats(u1, u2, -1);
 			}
 		} catch( MongoWriteException x ) {
 			return error( CONFLICT );
@@ -148,12 +145,5 @@ public class MongoProfiles implements Profiles {
 		
 		long count = followings.countDocuments(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2)));
 		return ok(count != 0);
-	}
-	
-	private void updateProfileStats(Profile u1, Profile u2, int update) {
-		u2.setFollowers(u2.getFollowers() + update);
-		u1.setFollowing(u1.getFollowing() + update);
-		updateProfile(u1);
-		updateProfile(u2);
 	}
 }
