@@ -103,7 +103,6 @@ public class MongoProfiles implements Profiles {
 
 	@Override
 	public Result<Void> follow(String userId1, String userId2, boolean isFollowing) {
-
 		Profile u1 = profiles.find(Filters.eq(DataBase.USERID, userId1)).first();
 		Profile u2 = profiles.find(Filters.eq(DataBase.USERID, userId2)).first();
 
@@ -115,8 +114,8 @@ public class MongoProfiles implements Profiles {
 				followers.insertOne( new Pair(userId2, userId1) );
 				followings.insertOne( new Pair(userId1, userId2) );
 			}else { //user1 quer deixar de seguir user2
-				followers.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId2), Filters.eq(DataBase.ID2, userId1) ));
-				followings.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2) ));
+				followers.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId2), Filters.eq(DataBase.ID2, userId1)));
+				followings.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2)));
 			}
 		} catch( MongoWriteException x ) {
 			return error( CONFLICT );
