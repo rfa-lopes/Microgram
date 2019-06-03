@@ -1,7 +1,5 @@
 package microgram.impl.dropbox;
 
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,7 +49,7 @@ public class DropboxMedia implements Media{
 	private static final String CREATE_FILE_V2_URL = "https://content.dropboxapi.com/2/files/upload";
 	private static final String DELETE_FILE_V2_URL = "https://api.dropboxapi.com/2/files/delete";
 	private static final String DOWNLOAD_FILE_V2_URL = "https://content.dropboxapi.com/2/files/download";
-	private static final String GET_TEMPORARY_LINK_FILE_V2_URL = "https://api.dropboxapi.com/2/files/get_temporary_link";
+	//private static final String GET_TEMPORARY_LINK_FILE_V2_URL = "https://api.dropboxapi.com/2/files/get_temporary_link";
 
 	private static final String DROPBOX_API_ARG = "Dropbox-API-Arg";
 	

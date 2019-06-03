@@ -13,13 +13,11 @@ import org.glassfish.jersey.server.ResourceConfig;
 import discovery.Discovery;
 import microgram.api.rest.RestPosts;
 import microgram.api.rest.RestProfiles;
-import microgram.impl.java.JavaPosts;
-import microgram.impl.java.JavaProfiles;
+
+import microgram.impl.mongo.MongoPosts;
 import microgram.impl.mongo.MongoProfiles;
 import microgram.impl.rest.posts.RestPostsResources;
-import microgram.impl.rest.posts.replicated.ReplicatedPostsResources;
 import microgram.impl.rest.profiles.RestProfilesResources;
-import microgram.impl.rest.profiles.replicated.ReplicatedProfilesResources;
 import microgram.impl.rest.utils.GenericExceptionMapper;
 import microgram.impl.rest.utils.PrematchingRequestFilter;
 import utils.Args;
@@ -29,7 +27,7 @@ public class MicrogramRestServer {
 	public static final int PORT = 18888;
 	private static final String POSTS_SERVICE = "Microgram-Posts";
 	private static final String PROFILES_SERVICE = "Microgram-Profiles";
-	
+
 	public static String SERVER_BASE_URI = "https://%s:%s/rest";
 
 	public static void main(String[] args) throws Exception {
@@ -45,12 +43,12 @@ public class MicrogramRestServer {
 
 		Discovery.announce(POSTS_SERVICE, serverURI + RestPosts.PATH);
 		Discovery.announce(PROFILES_SERVICE, serverURI + RestProfiles.PATH);
-	
+
 		ResourceConfig config = new ResourceConfig();
 
-		config.register(new RestPostsResources(new JavaPosts()));
-		config.register(new RestProfilesResources(new JavaProfiles()));
-		
+		config.register(new RestPostsResources(new MongoPosts()));
+		config.register(new RestProfilesResources(new MongoProfiles()));
+
 		config.register(new PrematchingRequestFilter());
 		config.register(new GenericExceptionMapper());
 

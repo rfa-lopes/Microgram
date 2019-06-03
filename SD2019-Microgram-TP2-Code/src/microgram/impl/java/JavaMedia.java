@@ -10,7 +10,6 @@ import microgram.impl.dropbox.DropboxMedia;
 
 public class JavaMedia implements Media {
 
-	private static final String MEDIA_EXTENSION = ".jpg";
 	private static final String ROOT_DIR = "/";
 	
 	private DropboxMedia media;
