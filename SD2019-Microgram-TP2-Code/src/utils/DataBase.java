@@ -34,7 +34,7 @@ public class DataBase {
 
 
 	private DataBase() {
-		mongo = new MongoClient( "localhost" );
+		mongo = new MongoClient( "mongo1" );
 		CodecRegistry codecRegistry = CodecRegistries.fromRegistries( MongoClient.getDefaultCodecRegistry(), CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()) );
 		dataBase = mongo.getDatabase(DB_NAME).withCodecRegistry(codecRegistry);
 	}
