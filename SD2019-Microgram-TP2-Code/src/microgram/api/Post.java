@@ -2,6 +2,8 @@ package microgram.api;
 
 import org.bson.codecs.pojo.annotations.BsonCreator;
 import org.bson.codecs.pojo.annotations.BsonProperty;
+import org.bson.codecs.pojo.annotations.BsonIgnore;
+
 
 import utils.Hash;
 import utils.JSON;
@@ -23,6 +25,7 @@ public class Post {
 	String location;
 	long timestamp;
 	
+	@BsonIgnore
 	int likes;
 
 	public Post() {}

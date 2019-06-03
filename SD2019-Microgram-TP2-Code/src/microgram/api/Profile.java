@@ -2,6 +2,8 @@ package microgram.api;
 
 import org.bson.codecs.pojo.annotations.BsonCreator;
 import org.bson.codecs.pojo.annotations.BsonProperty;
+import org.bson.codecs.pojo.annotations.BsonIgnore;
+
 
 import utils.JSON;
 
@@ -21,8 +23,11 @@ public class Profile {
 	String fullName;
 	String photoUrl;
 	
+	@BsonIgnore
 	int posts;
+	@BsonIgnore
 	int following;
+	@BsonIgnore
 	int followers;
 	
 	public Profile() {}

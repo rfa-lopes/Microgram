@@ -18,7 +18,6 @@ public class DataBase {
 	private static final String DB_NAME = "SD_TP2";
 
 	private static final String DB_TABLE_PROFILES = "Profiles";
-	private static final String DB_TABLE_FOLLOWERS = "Followers";
 	private static final String DB_TABLE_FOLLOWINGS = "Followings";
 
 	private static final String DB_TABLE_POSTS = "Posts";
@@ -63,15 +62,11 @@ public class DataBase {
 		return profiles;
 	}
 
-	public MongoCollection<Pair> getFollowers() {
-		MongoCollection<Pair> followers = dataBase.getCollection(DB_TABLE_FOLLOWERS, Pair.class);
-		followers.createIndex(Indexes.ascending(ID1,ID2), new IndexOptions().unique(true));
-		return followers;
-	}
-
 	public MongoCollection<Pair> getFollowings() {
 		MongoCollection<Pair> followings = dataBase.getCollection(DB_TABLE_FOLLOWINGS, Pair.class);
 		followings.createIndex(Indexes.ascending(ID1,ID2), new IndexOptions().unique(true));
+		//Facilitar a pequisa ao contrário
+		followings.createIndex(Indexes.hashed(ID2));
 		return followings;
 	}
 
