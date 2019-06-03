@@ -8,13 +8,10 @@ import static microgram.api.java.Result.ErrorCode.CONFLICT;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.bson.Document;
-
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.result.DeleteResult;
 
 import microgram.api.Post;
 import microgram.api.Profile;
@@ -42,34 +39,24 @@ public class MongoProfiles implements Profiles {
 
 	@Override
 	public Result<Profile> getProfile(String userId) {
-			Profile res = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
-			if(res == null) return error( NOT_FOUND );
+		Profile res = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
+		if(res == null) return error( NOT_FOUND );
 
-			//Atualizar as estatisticas
-			res.setFollowers((int)followers.countDocuments(Filters.eq(DataBase.ID1, userId)));
-			res.setFollowing((int)followings.countDocuments(Filters.eq(DataBase.ID1, userId)));
-			res.setPosts( (int)posts.countDocuments(Filters.eq("ownerId", userId)) );
+		//Atualizar as estatisticas
+		res.setFollowers((int)followers.countDocuments(Filters.eq(DataBase.ID1, userId)));
+		res.setFollowing((int)followings.countDocuments(Filters.eq(DataBase.ID1, userId)));
+		res.setPosts( (int)posts.countDocuments(Filters.eq("ownerId", userId)) );
 
-			return ok(res);
+		return ok(res);
 	}
 
 	@Override
 	public Result<Void> createProfile(Profile profile) {
 		Profile exist = profiles.find(Filters.eq(DataBase.USERID, profile.getUserId())).first();
 		if(exist != null) return error( CONFLICT );
-		
+
 		profiles.insertOne(profile);
 		return ok();
-	}
-
-	public Result<Void> updateProfile(Profile profile) {
-		try {
-			profiles.updateOne(Filters.eq(DataBase.USERID, profile.getUserId()), 
-					new Document("$set", profile));
-			return ok();
-		} catch( MongoWriteException x ) {
-			return error( CONFLICT );
-		}
 	}
 
 	@Override
@@ -118,16 +105,12 @@ public class MongoProfiles implements Profiles {
 		if(u1 == null || u2 == null)
 			return error(NOT_FOUND);
 
-		try {
-			if( isFollowing ) { //user1 quer seguir user2
-				followers.insertOne( new Pair(userId2, userId1) );
-				followings.insertOne( new Pair(userId1, userId2) );
-			}else { //user1 quer deixar de seguir user2
-				followers.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId2), Filters.eq(DataBase.ID2, userId1)));
-				followings.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2)));
-			}
-		} catch( MongoWriteException x ) {
-			return error( CONFLICT );
+		if( isFollowing ) { 	//user1 quer seguir user2
+			followers.insertOne( new Pair(userId2, userId1) );
+			followings.insertOne( new Pair(userId1, userId2) );
+		}else { 				//user1 quer deixar de seguir user2
+			followers.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId2), Filters.eq(DataBase.ID2, userId1)));
+			followings.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2)));
 		}
 		return ok();
 	}
