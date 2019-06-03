@@ -4,13 +4,9 @@ import static microgram.api.java.Result.error;
 import static microgram.api.java.Result.ok;
 import static microgram.api.java.Result.ErrorCode.CONFLICT;
 import static microgram.api.java.Result.ErrorCode.NOT_FOUND;
-import static microgram.impl.mongo.MongoProfiles.mProfiles;
-
 
 import java.util.LinkedList;
 import java.util.List;
-
-import org.bson.conversions.Bson;
 
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.FindIterable;
@@ -53,27 +49,21 @@ public class MongoPosts implements Posts {
 
 	@Override
 	public Result<String> createPost(Post post) {
-		try {
-			String userId = post.getOwnerId();
-			Result<Profile> res = mProfiles.getProfile(userId);
-			if( !res.isOK() )
-				return error(NOT_FOUND);
-			posts.insertOne(post);
-			return ok(post.getPostId());
-		} catch( MongoWriteException x ) {
-			return error( CONFLICT );
-		}
+		Profile res = profiles.find(Filters.eq(DataBase.USERID, post.getOwnerId())).first();
+		if( res == null ) return error(NOT_FOUND);
+		
+		posts.insertOne(post);
+		return ok(post.getPostId());
 	}
 
 	@Override
 	public Result<Void> deletePost(String postId) {
-		Bson pfilPOSTID = Filters.eq(DataBase.POSTID, postId);
-		Post post = posts.find(pfilPOSTID).first();
-		if(post == null)
-			return error(NOT_FOUND);
+		//Melhorar isto
+		Post post = posts.find(Filters.eq(DataBase.POSTID, postId)).first();
+		if(post == null) return error(NOT_FOUND);
 
 		//fazer delete no Posts (apagar o postId)
-		posts.deleteOne(pfilPOSTID);
+		posts.deleteOne(Filters.eq(DataBase.POSTID, postId));
 
 		//Fazer delete no likes (postOd deixa de ter likes)
 		likes.deleteMany(Filters.eq(DataBase.ID1, postId));
@@ -90,7 +80,7 @@ public class MongoPosts implements Posts {
 		//Se o post nao existir || o perfil nao existir retorna NOT_FOUND
 		if( post == null || profile == null)
 			return error( NOT_FOUND );
-		
+
 		if (isLiked)			//Profile mete like no post
 			try{
 				likes.insertOne(new Pair(postId, userId));

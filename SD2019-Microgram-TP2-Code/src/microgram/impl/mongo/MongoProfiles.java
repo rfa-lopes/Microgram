@@ -14,6 +14,7 @@ import com.mongodb.MongoWriteException;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.result.DeleteResult;
 
 import microgram.api.Post;
 import microgram.api.Profile;
@@ -29,7 +30,6 @@ public class MongoProfiles implements Profiles {
 	private MongoCollection<Pair> followings;
 	private MongoCollection<Post> posts;
 	private MongoCollection<Pair> likes;
-	static MongoProfiles mProfiles;
 
 	public MongoProfiles() {
 		DataBase db = DataBase.init();
@@ -38,13 +38,12 @@ public class MongoProfiles implements Profiles {
 		followings = db.getFollowings();
 		posts = db.getPosts();
 		likes = db.getLikes();
-		mProfiles = this;
 	}
 
 	@Override
 	public Result<Profile> getProfile(String userId) {
-		try {
 			Profile res = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
+			if(res == null) return error( NOT_FOUND );
 
 			//Atualizar as estatisticas
 			res.setFollowers((int)followers.countDocuments(Filters.eq(DataBase.ID1, userId)));
@@ -52,19 +51,15 @@ public class MongoProfiles implements Profiles {
 			res.setPosts( (int)posts.countDocuments(Filters.eq("ownerId", userId)) );
 
 			return ok(res);
-		}catch(MongoWriteException x) {
-			return error(NOT_FOUND);
-		}
 	}
 
 	@Override
 	public Result<Void> createProfile(Profile profile) {
-		try {
-			profiles.insertOne(profile);
-			return ok();
-		} catch( MongoWriteException x ) {
-			return error( CONFLICT );
-		}
+		Profile exist = profiles.find(Filters.eq(DataBase.USERID, profile.getUserId())).first();
+		if(exist != null) return error( CONFLICT );
+		
+		profiles.insertOne(profile);
+		return ok();
 	}
 
 	public Result<Void> updateProfile(Profile profile) {
@@ -79,28 +74,29 @@ public class MongoProfiles implements Profiles {
 
 	@Override
 	public Result<Void> deleteProfile(String userId) {
-		try {
-			//Fazer delete na tabela Profiles (o profile)
-			profiles.deleteOne(Filters.eq(DataBase.USERID, userId));
 
-			//Fazer delete na tabela Posts (os posts do profile)
-			posts.deleteMany(Filters.eq(DataBase.OWNERID, userId));
+		//Melhorar isto
+		Profile exist = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
+		if ( exist == null ) return error(NOT_FOUND);
 
-			//Fazer delete na tabela likes (os likes do profile)
-			likes.deleteMany(Filters.eq(DataBase.ID2, userId));
+		//Fazer delete na tabela Profiles (o profile)
+		profiles.deleteOne(Filters.eq(DataBase.USERID, userId)).wasAcknowledged();
 
-			//Fazer delete na tabela followers (os followers do user / os que o user faz follow)
-			followers.deleteMany(Filters.eq(DataBase.ID1, userId));
-			followers.deleteMany(Filters.eq(DataBase.ID2, userId));
+		//Fazer delete na tabela Posts (os posts do profile)
+		posts.deleteMany(Filters.eq(DataBase.OWNERID, userId));
 
-			//Fazer delete na tabela followings (os followings do user / os que o user faz following)
-			followings.deleteMany(Filters.eq(DataBase.ID1, userId));
-			followings.deleteMany(Filters.eq(DataBase.ID2, userId));
+		//Fazer delete na tabela likes (os likes do profile)
+		likes.deleteMany(Filters.eq(DataBase.ID2, userId));
 
-			return ok();
-		}catch(MongoWriteException x) {
-			return error(NOT_FOUND);
-		}
+		//Fazer delete na tabela followers (os followers do user / os que o user faz follow)
+		followers.deleteMany(Filters.eq(DataBase.ID1, userId));
+		followers.deleteMany(Filters.eq(DataBase.ID2, userId));
+
+		//Fazer delete na tabela followings (os followings do user / os que o user faz following)
+		followings.deleteMany(Filters.eq(DataBase.ID1, userId));
+		followings.deleteMany(Filters.eq(DataBase.ID2, userId));
+
+		return ok();
 	}
 
 	@Override
