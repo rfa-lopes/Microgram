@@ -6,7 +6,8 @@ import utils.Random;
 public class MicrogramOperation {
 	
 	public static enum Operation {
-		CreatePost, GetPost, DeletePost, LikePost, UnLikePost, IsLiked, GetPosts, GetFeed, CreateProfile, GetProfile, DeleteProfile, FollowProfile, UnFollowProfile, SearchProfile, IsFollowing 
+		CreatePost, GetPost, DeletePost, LikePost, UnLikePost, IsLiked, GetPosts, GetFeed,
+		CreateProfile, GetProfile, DeleteProfile, FollowProfile, UnFollowProfile, SearchProfile, IsFollowing 
 	}
 	
 	private static final String DELIMITER = "\t";
@@ -17,7 +18,7 @@ public class MicrogramOperation {
 	public MicrogramOperation(Operation type, Object args) {
 		this.type = type;
 		this.id = Random.key128();
-		this.jsonArgs = JSON.encode( args);
+		this.jsonArgs = JSON.encode(args);
 	}
 
 	public MicrogramOperation( String encoding ) {

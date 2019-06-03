@@ -12,11 +12,11 @@ import microgram.impl.rest.replication.TotalOrderExecutor;
 
 public class ReplicatedPostsResources extends RestResource implements RestPosts {
 	final Posts localDB;
-	final _TODO_PostsReplicator replicator;
+	final PostsReplicator replicator;
 	
 	public ReplicatedPostsResources() {
 		this.localDB = new MongoPosts();
-		this.replicator = null; //new _TODO_PostsReplicator(localDB, new TotalOrderExecutor(MicrogramTopic.MicrogramEvents));
+		this.replicator = new PostsReplicator(localDB, new TotalOrderExecutor(MicrogramTopic.MicrogramEvents));
 	}
 
 	@Override

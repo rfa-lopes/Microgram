@@ -3,6 +3,12 @@ package microgram.impl.rest.profiles.replicated;
 import static microgram.api.java.Result.error;
 import static microgram.api.java.Result.ErrorCode.NOT_IMPLEMENTED;
 import static microgram.impl.rest.replication.MicrogramOperation.Operation.GetProfile;
+import static microgram.impl.rest.replication.MicrogramOperation.Operation.CreateProfile;
+import static microgram.impl.rest.replication.MicrogramOperation.Operation.DeleteProfile;
+import static microgram.impl.rest.replication.MicrogramOperation.Operation.FollowProfile;
+import static microgram.impl.rest.replication.MicrogramOperation.Operation.SearchProfile;
+import static microgram.impl.rest.replication.MicrogramOperation.Operation.IsFollowing;
+
 
 import java.util.List;
 
@@ -17,36 +23,38 @@ import microgram.impl.rest.replication.TotalOrderExecutor;
 public  class ProfilesReplicator implements MicrogramOperationExecutor, Profiles {
 
 	private static final int FOLLOWER = 0, FOLLOWEE = 1;
-	
+
 	final Profiles localReplicaDB;
 	final OrderedExecutor executor;
-	
+
 	ProfilesReplicator( Profiles localDB, TotalOrderExecutor totalOrderExecutor) {
 		this.localReplicaDB = localDB;
 		this.executor = totalOrderExecutor.init(this);
 	}
-	
+
 	@Override
 	public Result<?> execute( MicrogramOperation op ) {
 		switch( op.type ) {
-			case CreateProfile: {
-				return localReplicaDB.createProfile( op.arg( Profile.class));
-			}case GetProfile: {
-				return localReplicaDB.getProfile( op.arg(String.class));
-			}case DeleteProfile: {
-				
-			}case FollowProfile: {
-				
-			}case UnFollowProfile: {
-				
-			}case SearchProfile: {
-				
-			}case IsFollowing: {
-				String[] users = op.args(String[].class);
-				return localReplicaDB.isFollowing( users[FOLLOWER], users[FOLLOWEE]);
-			}
-			default:
-				return error(NOT_IMPLEMENTED);
+		case CreateProfile: {
+			return localReplicaDB.createProfile( op.arg(Profile.class));
+		}case GetProfile: {
+			return localReplicaDB.getProfile( op.arg(String.class));
+		}case DeleteProfile: {
+			return localReplicaDB.deleteProfile( op.arg(String.class));
+		}case FollowProfile: {
+			String[] users = op.args(String[].class);
+			return localReplicaDB.follow(users[FOLLOWER], users[FOLLOWEE], true);
+		}case UnFollowProfile: {
+			String[] users = op.args(String[].class);
+			return localReplicaDB.follow(users[FOLLOWER], users[FOLLOWEE], false);
+		}case SearchProfile: {
+			return localReplicaDB.search(op.args(String.class));
+		}case IsFollowing: {
+			String[] users = op.args(String[].class);
+			return localReplicaDB.isFollowing( users[FOLLOWER], users[FOLLOWEE]);
+		}
+		default:
+			return error(NOT_IMPLEMENTED);
 		}	
 	}
 
@@ -57,31 +65,28 @@ public  class ProfilesReplicator implements MicrogramOperationExecutor, Profiles
 
 	@Override
 	public Result<Void> createProfile(Profile profile) {
-		// TODO Auto-generated method stub
-		return null;
+		return executor.replicate( new MicrogramOperation(CreateProfile, profile));
 	}
 
 	@Override
 	public Result<Void> deleteProfile(String userId) {
-		// TODO Auto-generated method stub
-		return null;
+		return executor.replicate( new MicrogramOperation(DeleteProfile, userId));
 	}
 
 	@Override
 	public Result<List<Profile>> search(String prefix) {
-		// TODO Auto-generated method stub
-		return null;
+		return executor.replicate( new MicrogramOperation(SearchProfile, prefix));
 	}
 
 	@Override
 	public Result<Void> follow(String userId1, String userId2, boolean isFollowing) {
-		// TODO Auto-generated method stub
-		return null;
+		Object[] args = {userId1, userId2, isFollowing};
+		return executor.replicate( new MicrogramOperation(FollowProfile, args));
 	}
 
 	@Override
 	public Result<Boolean> isFollowing(String userId1, String userId2) {
-		// TODO Auto-generated method stub
-		return null;
+		String[] users = {userId1, userId2};
+		return executor.replicate( new MicrogramOperation(IsFollowing, users));
 	}
 }
