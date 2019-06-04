@@ -36,6 +36,7 @@ public class MongoProfiles implements Profiles {
 
 	@Override
 	public Result<Profile> getProfile(String userId) {
+		//Verificar se o user existe
 		Profile res = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
 		if(res == null) return error( NOT_FOUND );
 
@@ -49,9 +50,11 @@ public class MongoProfiles implements Profiles {
 
 	@Override
 	public Result<Void> createProfile(Profile profile) {
-		Profile exist = profiles.find(Filters.eq(DataBase.USERID, profile.getUserId())).first();
-		if(exist != null) return error( CONFLICT );
+		//Verificar se o user existe (se nao existe retorna 0)
+		long pro = profiles.countDocuments(Filters.eq(DataBase.USERID, profile.getUserId()));
+		if(pro != 0) return error( CONFLICT );
 
+		//inserir na tabela de profiles o novo user
 		profiles.insertOne(profile);
 		return ok();
 	}
@@ -59,14 +62,15 @@ public class MongoProfiles implements Profiles {
 	@Override
 	public Result<Void> deleteProfile(String userId) {
 
-		Profile exist = profiles.findOneAndDelete(Filters.eq(DataBase.USERID, userId));
-		if ( exist == null ) return error(NOT_FOUND);
+		//Verificar se o user foi removido, se nao foi e porque nao exitia e devolve null
+		Profile pro = profiles.findOneAndDelete(Filters.eq(DataBase.USERID, userId));
+		if ( pro == null ) return error(NOT_FOUND);
 
 		//Fazer delete na tabela Posts (os posts do profile)
-				posts.deleteMany(Filters.eq(DataBase.OWNERID, userId));
+		posts.deleteMany(Filters.eq(DataBase.OWNERID, userId));
 
-				//Fazer delete na tabela likes (os likes do profile)
-				likes.deleteMany(Filters.eq(DataBase.ID2, userId));
+		//Fazer delete na tabela likes (os likes do profile)
+		likes.deleteMany(Filters.eq(DataBase.ID2, userId));
 
 		//Fazer delete na tabela followings (os followings do user / os que o user faz following)
 		followings.deleteMany(Filters.eq(DataBase.ID1, userId));
@@ -80,18 +84,20 @@ public class MongoProfiles implements Profiles {
 		String p = "^" + prefix;
 		FindIterable<Profile> found = profiles.find(Filters.regex(DataBase.USERID, p));
 
+		//LinkedList e mais facil de adicionar para um numero indeterminado de users com o prefix indicado
 		List<Profile> res = new LinkedList<Profile>();
 		for(Profile pro : found)
 			res.add(pro);
+		//Pode devolver uma lista vazia
 		return ok(res);
 	}
 
 	@Override
 	public Result<Void> follow(String userId1, String userId2, boolean isFollowing) {
-		Profile u1 = profiles.find(Filters.eq(DataBase.USERID, userId1)).first();
-		Profile u2 = profiles.find(Filters.eq(DataBase.USERID, userId2)).first();
-
-		if(u1 == null || u2 == null)
+		long u1 = profiles.countDocuments(Filters.eq(DataBase.USERID, userId1));
+		long u2 = profiles.countDocuments(Filters.eq(DataBase.USERID, userId2));
+		//Verificar se os users existem, se nao exitirem devolve 0
+		if(u1 == 0 || u2 == 0)
 			return error(NOT_FOUND);
 
 		try {
@@ -104,6 +110,8 @@ public class MongoProfiles implements Profiles {
 				followings.deleteOne(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2)));
 
 		}catch(Exception x) {
+			//Caso queira adicionar um follow que ja existe
+			//Caso queira remover um follow que nao existe
 			return error(CONFLICT);
 		}
 		return ok();
@@ -111,12 +119,13 @@ public class MongoProfiles implements Profiles {
 
 	@Override
 	public Result<Boolean> isFollowing(String userId1, String userId2) {
-		Profile u1 = profiles.find(Filters.eq(DataBase.USERID, userId1)).first();
-		Profile u2 = profiles.find(Filters.eq(DataBase.USERID, userId2)).first();
-
-		if(u1 == null || u2 == null)
+		long u1 = profiles.countDocuments(Filters.eq(DataBase.USERID, userId1));
+		long u2 = profiles.countDocuments(Filters.eq(DataBase.USERID, userId2));
+		//Verificar se os users existem, se nao exitirem devolve 0
+		if(u1 == 0 || u2 == 0)
 			return error(NOT_FOUND);
 
+		//Se existe devolve 1, se nao devolve 0
 		long count = followings.countDocuments(Filters.and(Filters.eq(DataBase.ID1, userId1), Filters.eq(DataBase.ID2, userId2)));
 		return ok(count != 0);
 	}
