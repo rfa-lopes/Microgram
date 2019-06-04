@@ -16,6 +16,7 @@ import microgram.api.rest.RestProfiles;
 
 import microgram.impl.mongo.MongoPosts;
 import microgram.impl.mongo.MongoProfiles;
+import microgram.impl.rest.posts.RestPostsResources;
 import microgram.impl.rest.posts.replicated.ReplicatedPostsResources;
 import microgram.impl.rest.profiles.RestProfilesResources;
 import microgram.impl.rest.profiles.replicated.ReplicatedProfilesResources;
@@ -47,6 +48,9 @@ public class MicrogramRestServer {
 
 		ResourceConfig config = new ResourceConfig();
 
+		//config.register(new RestPostsResources(new MongoPosts()));
+		//config.register(new RestProfilesResources(new MongoProfiles()));
+		
 		config.register(new ReplicatedPostsResources());
 		config.register(new ReplicatedProfilesResources());
 

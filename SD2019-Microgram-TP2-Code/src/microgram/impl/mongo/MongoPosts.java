@@ -20,20 +20,19 @@ import microgram.api.java.Result;
 import utils.DataBase;
 import utils.Pair;
 
-import static microgram.impl.mongo.MongoProfiles.mProfiles;
-
 public class MongoPosts implements Posts {
 
+	private MongoCollection<Profile> profiles;
+	private MongoCollection<Pair> followings;
 	private MongoCollection<Post> posts;
 	private MongoCollection<Pair> likes;
 
-	static MongoPosts mPosts;
-
 	public MongoPosts() {
 		DataBase db = DataBase.init();
+		profiles = db.getProfiles();
+		followings = db.getFollowings();
 		posts = db.getPosts();
 		likes = db.getLikes();
-		mPosts = this;
 	}
 
 	@Override
@@ -48,7 +47,7 @@ public class MongoPosts implements Posts {
 
 	@Override
 	public Result<String> createPost(Post post) {
-		Profile res = mProfiles.verifyProfile(post.getOwnerId());
+		Profile res = profiles.find(Filters.eq(DataBase.USERID, post.getOwnerId())).first();
 		if( res == null )
 			return error(NOT_FOUND);
 
@@ -72,7 +71,7 @@ public class MongoPosts implements Posts {
 	public Result<Void> like(String postId, String userId, boolean isLiked) {
 
 		Post post = posts.find(Filters.eq(DataBase.POSTID, postId)).first();
-		Profile profile = mProfiles.verifyProfile(userId);
+		Profile profile = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
 
 		//Se o post nao existir || o perfil nao existir retorna NOT_FOUND
 		if( post == null || profile == null)
@@ -94,7 +93,7 @@ public class MongoPosts implements Posts {
 	@Override
 	public Result<Boolean> isLiked(String postId, String userId) {
 		Post post = posts.find(Filters.eq(DataBase.POSTID, postId)).first();
-		Profile user = mProfiles.verifyProfile(userId);
+		Profile user = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
 
 		//Se o post ou o user nao existirem retorna NOT_FOUND
 		if( post == null || user == null )
@@ -108,7 +107,7 @@ public class MongoPosts implements Posts {
 	@Override
 	public Result<List<String>> getPosts(String userId) {
 
-		Profile user = mProfiles.verifyProfile(userId);
+		Profile user = profiles.find(Filters.eq(DataBase.USERID, userId)).first();
 
 		if(user == null)
 			return error(NOT_FOUND);
@@ -124,13 +123,13 @@ public class MongoPosts implements Posts {
 	@Override
 	public Result<List<String>> getFeed(String userId) {
 
-		Profile user = mProfiles.verifyProfile(userId);
+		Profile user =  profiles.find(Filters.eq(DataBase.USERID, userId)).first();
 		if(user == null)
 			return error(NOT_FOUND);
 
 		List<String> res = new LinkedList<String>();
 
-		FindIterable<Pair> foll = mProfiles.verifyFollowings(userId);
+		FindIterable<Pair> foll = followings.find(Filters.eq(DataBase.ID1, userId));
 
 		for(Pair f : foll) {
 			FindIterable<Post> userposts = posts.find(Filters.eq("ownerId", f.getId2()));
@@ -140,19 +139,5 @@ public class MongoPosts implements Posts {
 
 		return ok(res);
 	}
-
-
-	public int getNumberPosts(String userId) {
-		return (int) posts.countDocuments(Filters.eq(DataBase.OWNERID, userId));
-	}
-
-	public void deleteAllPosts(String userId) {
-		//Fazer delete na tabela Posts (os posts do profile)
-		posts.deleteMany(Filters.eq(DataBase.OWNERID, userId));
-
-		//Fazer delete na tabela likes (os likes do profile)
-		likes.deleteMany(Filters.eq(DataBase.ID2, userId));
-	}
-
 
 }

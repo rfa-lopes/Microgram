@@ -6,6 +6,7 @@ import static microgram.impl.rest.replication.MicrogramOperation.Operation.GetPr
 import static microgram.impl.rest.replication.MicrogramOperation.Operation.CreateProfile;
 import static microgram.impl.rest.replication.MicrogramOperation.Operation.DeleteProfile;
 import static microgram.impl.rest.replication.MicrogramOperation.Operation.FollowProfile;
+import static microgram.impl.rest.replication.MicrogramOperation.Operation.UnFollowProfile;
 import static microgram.impl.rest.replication.MicrogramOperation.Operation.SearchProfile;
 import static microgram.impl.rest.replication.MicrogramOperation.Operation.IsFollowing;
 
@@ -35,21 +36,21 @@ public  class ProfilesReplicator implements MicrogramOperationExecutor, Profiles
 	@Override
 	public Result<?> execute( MicrogramOperation op ) {
 		switch( op.type ) {
-		case CreateProfile: {
+		case CreateProfile:
 			return localReplicaDB.createProfile( op.arg(Profile.class));
-		}case GetProfile: {
+		case GetProfile:
 			return localReplicaDB.getProfile( op.arg(String.class));
-		}case DeleteProfile: {
+		case DeleteProfile: 
 			return localReplicaDB.deleteProfile( op.arg(String.class));
-		}case FollowProfile: {
+		case FollowProfile: {
 			String[] users = op.args(String[].class);
 			return localReplicaDB.follow(users[FOLLOWER], users[FOLLOWEE], true);
 		}case UnFollowProfile: {
 			String[] users = op.args(String[].class);
 			return localReplicaDB.follow(users[FOLLOWER], users[FOLLOWEE], false);
-		}case SearchProfile: {
+		}case SearchProfile:
 			return localReplicaDB.search(op.args(String.class));
-		}case IsFollowing: {
+		case IsFollowing: {
 			String[] users = op.args(String[].class);
 			return localReplicaDB.isFollowing( users[FOLLOWER], users[FOLLOWEE]);
 		}
@@ -80,8 +81,10 @@ public  class ProfilesReplicator implements MicrogramOperationExecutor, Profiles
 
 	@Override
 	public Result<Void> follow(String userId1, String userId2, boolean isFollowing) {
-		Object[] args = {userId1, userId2, isFollowing};
-		return executor.replicate( new MicrogramOperation(FollowProfile, args));
+		String[] args = {userId1, userId2};
+		if(isFollowing)
+			return executor.replicate( new MicrogramOperation(FollowProfile, args));
+		return executor.replicate( new MicrogramOperation(UnFollowProfile, args));
 	}
 
 	@Override

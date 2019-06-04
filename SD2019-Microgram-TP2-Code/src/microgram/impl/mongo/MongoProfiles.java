@@ -12,26 +12,26 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 
+import microgram.api.Post;
 import microgram.api.Profile;
 import microgram.api.java.Profiles;
 import microgram.api.java.Result;
 import utils.DataBase;
 import utils.Pair;
 
-import static microgram.impl.mongo.MongoPosts.mPosts;
-
 public class MongoProfiles implements Profiles {
 
 	private MongoCollection<Profile> profiles;
 	private MongoCollection<Pair> followings;
-
-	static MongoProfiles mProfiles;
+	private MongoCollection<Post> posts;
+	private MongoCollection<Pair> likes;
 
 	public MongoProfiles() {
 		DataBase db = DataBase.init();
 		profiles = db.getProfiles();
 		followings = db.getFollowings();
-		mProfiles = this;
+		posts = db.getPosts();
+		likes = db.getLikes();
 	}
 
 	@Override
@@ -42,7 +42,7 @@ public class MongoProfiles implements Profiles {
 		//Atualizar as estatisticas
 		res.setFollowing((int)followings.countDocuments(Filters.eq(DataBase.ID1, userId)));
 		res.setFollowers((int) followings.countDocuments(Filters.eq(DataBase.ID2, userId)));
-		res.setPosts( mPosts.getNumberPosts(userId) );
+		res.setPosts((int) posts.countDocuments(Filters.eq(DataBase.OWNERID, userId)));
 
 		return ok(res);
 	}
@@ -62,7 +62,11 @@ public class MongoProfiles implements Profiles {
 		Profile exist = profiles.findOneAndDelete(Filters.eq(DataBase.USERID, userId));
 		if ( exist == null ) return error(NOT_FOUND);
 
-		mPosts.deleteAllPosts(userId);
+		//Fazer delete na tabela Posts (os posts do profile)
+				posts.deleteMany(Filters.eq(DataBase.OWNERID, userId));
+
+				//Fazer delete na tabela likes (os likes do profile)
+				likes.deleteMany(Filters.eq(DataBase.ID2, userId));
 
 		//Fazer delete na tabela followings (os followings do user / os que o user faz following)
 		followings.deleteMany(Filters.eq(DataBase.ID1, userId));
@@ -117,11 +121,4 @@ public class MongoProfiles implements Profiles {
 		return ok(count != 0);
 	}
 
-	public Profile verifyProfile(String userId) {
-		return profiles.find(Filters.eq(DataBase.USERID, userId)).first();
-	}
-
-	public FindIterable<Pair> verifyFollowings(String userId) {
-		return followings.find(Filters.eq(DataBase.ID1, userId));
-	}
 }

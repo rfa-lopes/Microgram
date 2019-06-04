@@ -1,10 +1,13 @@
 package utils;
 
+import java.util.Arrays;
+
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 
 import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
@@ -34,7 +37,7 @@ public class DataBase {
 
 
 	private DataBase() {
-		mongo = new MongoClient( "mongo1" );
+		mongo = new MongoClient("localhost");
 		CodecRegistry codecRegistry = CodecRegistries.fromRegistries( MongoClient.getDefaultCodecRegistry(), CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()) );
 		dataBase = mongo.getDatabase(DB_NAME).withCodecRegistry(codecRegistry);
 	}

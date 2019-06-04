@@ -5,6 +5,7 @@ import static microgram.impl.rest.replication.MicrogramOperation.Operation.Creat
 import static microgram.impl.rest.replication.MicrogramOperation.Operation.GetPost;
 import static microgram.impl.rest.replication.MicrogramOperation.Operation.DeletePost;
 import static microgram.impl.rest.replication.MicrogramOperation.Operation.LikePost;
+import static microgram.impl.rest.replication.MicrogramOperation.Operation.UnLikePost;
 import static microgram.impl.rest.replication.MicrogramOperation.Operation.IsLiked;
 import static microgram.impl.rest.replication.MicrogramOperation.Operation.GetPosts;
 import static microgram.impl.rest.replication.MicrogramOperation.Operation.GetFeed;
@@ -51,9 +52,8 @@ public class PostsReplicator implements MicrogramOperationExecutor, Posts {
 			return localReplicaDB.isLiked(users[PostID], users[UserID]);
 		}case GetPosts :
 			return localReplicaDB.getPosts(op.args(String.class));
-		case GetFeed : {
+		case GetFeed :
 			return localReplicaDB.getFeed(op.args(String.class));
-		}
 		default:
 			return error(NOT_IMPLEMENTED);
 		}
@@ -76,8 +76,10 @@ public class PostsReplicator implements MicrogramOperationExecutor, Posts {
 
 	@Override
 	public Result<Void> like(String postId, String userId, boolean isLiked) {
-		Object[] args = {postId, userId, isLiked};
-		return executor.replicate( new MicrogramOperation(LikePost, args));
+		String[] args = {postId, userId};
+		if(isLiked)
+			return executor.replicate( new MicrogramOperation(LikePost, args));
+		return executor.replicate( new MicrogramOperation(UnLikePost, args));
 	}
 
 	@Override

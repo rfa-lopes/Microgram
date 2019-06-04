@@ -5,8 +5,8 @@ shared-process-backend-services-bool=true
 shared-process-backend-services-mainclass=microgram.impl.rest.MicrogramRestServer
 shared-process-backend-services-port=18888
 
-uses-kafka-bool=false
-uses-external-mongo-bool=true
+uses-kafka-bool=true
+uses-external-mongo-bool=false
 
 posts-rest-service-mainclass=microgram.impl.rest.posts.PostsRestServer
 posts-rest-service-port=17777
